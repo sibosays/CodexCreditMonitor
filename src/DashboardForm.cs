@@ -31,6 +31,7 @@ internal sealed class DashboardForm : Form
     public event Action<double>? WarningRaised;
     public event Action<UsageSummary?, string?>? RefreshCompleted;
     public event Action? SettingsRequested;
+    public event Action? InfoRequested;
     [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
     internal UsageSummary? LatestUsage { get; private set; }
 
@@ -63,7 +64,10 @@ internal sealed class DashboardForm : Form
         refresh.Click += (_, _) => RefreshUsage();
         var settings = new HeaderIconButton(HeaderIcon.Settings) { Location = new Point(322, 0), Anchor = AnchorStyles.Top | AnchorStyles.Right, AccessibleName = Ui.T("Instellingen", "Settings") };
         settings.Click += (_, _) => SettingsRequested?.Invoke();
+        var info = new HeaderIconButton(HeaderIcon.Info) { Location = new Point(278, 0), Anchor = AnchorStyles.Top | AnchorStyles.Right, AccessibleName = Ui.T("Info", "About") };
+        info.Click += (_, _) => InfoRequested?.Invoke();
         var settingsTooltip = new ToolTip();
+        settingsTooltip.SetToolTip(info, Ui.T("Info", "About"));
         settingsTooltip.SetToolTip(settings, Ui.T("Instellingen", "Settings"));
         settingsTooltip.SetToolTip(refresh, Ui.T("Nu vernieuwen", "Refresh now"));
         _refreshBanner.Location = new Point(0, 52);
@@ -72,7 +76,7 @@ internal sealed class DashboardForm : Form
         _refreshBannerText.Dock = DockStyle.Fill;
         _refreshBannerText.TextAlign = ContentAlignment.MiddleLeft;
         _refreshBanner.Controls.Add(_refreshBannerText);
-        header.Controls.AddRange([title, _updated, settings, refresh, _refreshBanner]);
+        header.Controls.AddRange([title, _updated, info, settings, refresh, _refreshBanner]);
 
         var balanceCard = Card(122);
         var balanceCaption = NewLabel(11, FontStyle.Regular, Color.FromArgb(168, 185, 205));
@@ -373,6 +377,7 @@ internal sealed class DashboardForm : Form
 
 internal enum HeaderIcon
 {
+    Info,
     Settings,
     Refresh
 }
@@ -421,6 +426,16 @@ internal sealed class HeaderIconButton : Control
             eventArgs.Graphics.DrawArc(pen, 8, 6, 20, 20, -58, 286);
             using var fill = new SolidBrush(Color.FromArgb(197, 220, 252));
             eventArgs.Graphics.FillPolygon(fill, [new Point(29, 8), new Point(23, 8), new Point(28, 14)]);
+            return;
+        }
+
+        if (_icon == HeaderIcon.Info)
+        {
+            eventArgs.Graphics.DrawEllipse(pen, 9, 7, 18, 18);
+            using var infoFont = new Font("Segoe UI", 12, FontStyle.Bold);
+            using var infoBrush = new SolidBrush(Color.FromArgb(197, 220, 252));
+            var infoSize = eventArgs.Graphics.MeasureString("i", infoFont);
+            eventArgs.Graphics.DrawString("i", infoFont, infoBrush, (Width - infoSize.Width) / 2, 7);
             return;
         }
 

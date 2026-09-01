@@ -212,6 +212,7 @@ internal static class Program
             new UsageAlertToast(percent).Show();
         };
         dashboard.SettingsRequested += ShowSettings;
+        dashboard.InfoRequested += ShowInfo;
         dashboard.RefreshCompleted += (usage, error) =>
         {
             activeRefreshToast?.Close();
