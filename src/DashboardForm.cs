@@ -56,7 +56,7 @@ internal sealed class DashboardForm : Form
         title.Text = "Codex Credit Monitor";
         title.Location = new Point(0, 0);
         title.AutoSize = true;
-        _updated.Text = "Lokale gebruiksregistratie";
+        _updated.Text = Ui.S("Dashboard.LocalTracking");
         _updated.Location = new Point(1, 29);
         _updated.AutoSize = true;
         var refresh = new HeaderIconButton(HeaderIcon.Refresh) { Location = new Point(366, 0), Anchor = AnchorStyles.Top | AnchorStyles.Right, AccessibleName = Ui.T("Vernieuwen", "Refresh") };
@@ -76,7 +76,7 @@ internal sealed class DashboardForm : Form
 
         var balanceCard = Card(122);
         var balanceCaption = NewLabel(11, FontStyle.Regular, Color.FromArgb(168, 185, 205));
-        balanceCaption.Text = "BESCHIKBAAR CREDITTEGOED";
+        balanceCaption.Text = Ui.S("Dashboard.AvailableBalance");
         balanceCaption.Location = new Point(17, 16);
         balanceCaption.AutoSize = true;
         _balance.Location = new Point(16, 36);
@@ -104,7 +104,7 @@ internal sealed class DashboardForm : Form
 
         var sessionsCard = Card(170);
         var sessionsHeader = NewLabel(11, FontStyle.Regular, Color.FromArgb(168, 185, 205));
-        sessionsHeader.Text = "RECENTE SESSIES VANDAAG";
+        sessionsHeader.Text = Ui.S("Dashboard.RecentSessions");
         sessionsHeader.Location = new Point(17, 14);
         sessionsHeader.AutoSize = true;
         _sessions.Location = new Point(12, 38);
@@ -222,11 +222,11 @@ internal sealed class DashboardForm : Form
     private void ApplyUsage(UsageSummary usage)
     {
         LatestUsage = usage;
-        _balance.Text = usage.CreditBalance is decimal balance ? $"{balance:N1} credits" : "Nog niet beschikbaar";
+        _balance.Text = usage.CreditBalance is decimal balance ? $"{balance:N1} credits" : Ui.T("Nog niet beschikbaar", "Not available yet");
         UpdateBalanceNote();
         _updated.Text = usage.LastUpdate is DateTimeOffset updated
             ? $"Laatst bijgewerkt {updated.LocalDateTime:HH:mm} · realtime bewaakt"
-            : usage.Error ?? "Geen gegevens";
+            : usage.Error ?? Ui.S("Dashboard.NoData");
         _fiveHour.SetValue(usage.FiveHourPercent, Ui.T("verbruikt", "used"));
         _week.SetValue(usage.WeekPercent, Ui.T("verbruikt", "used"));
         _todayRequests.Text = usage.TodayRequests.ToString("N0");
@@ -238,7 +238,7 @@ internal sealed class DashboardForm : Form
     private void UpdateBalanceNote()
     {
         _autoRechargeBadge.Visible = true;
-        _balanceNote.Text = $"AUTO OPWAARDEREN · {_autoRechargeThreshold} → {_autoRechargeTarget} CREDITS";
+        _balanceNote.Text = $"{Ui.S("Dashboard.AutoRecharge")} · {_autoRechargeThreshold} → {_autoRechargeTarget} CREDITS";
     }
 
     private void UpdateSessions(IReadOnlyList<SessionUsage> sessions)
@@ -248,7 +248,7 @@ internal sealed class DashboardForm : Form
         if (sessions.Count == 0)
         {
             var empty = NewLabel(10, FontStyle.Regular, Color.FromArgb(150, 169, 191));
-            empty.Text = "Nog geen sessieactiviteit van vandaag.";
+            empty.Text = Ui.S("Dashboard.NoSessions");
             empty.Margin = new Padding(5, 5, 0, 0);
             empty.AutoSize = true;
             _sessions.Controls.Add(empty);

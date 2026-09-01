@@ -29,8 +29,8 @@ internal sealed class InfoForm : Form
         root.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
 
         var product = Header($"Codex Credit Monitor v{version}", 15, FontStyle.Bold, Color.White);
-        var author = Header("Concept & Realisatie: C.S.K. (Simon) Bouwens", 10, FontStyle.Bold, Color.FromArgb(193, 214, 241));
-        var copyright = Header("© 2026 C.S.K. (Simon) Bouwens · Gebouwd met AI-ondersteuning", 9, FontStyle.Italic, Color.FromArgb(154, 177, 207));
+        var author = Header(Ui.S("Info.Concept"), 10, FontStyle.Bold, Color.FromArgb(193, 214, 241));
+        var copyright = Header(Ui.S("Info.Ai"), 9, FontStyle.Italic, Color.FromArgb(154, 177, 207));
         var line = new Panel { Dock = DockStyle.Fill, Height = 1, BackColor = Color.FromArgb(59, 79, 104), Margin = Padding.Empty };
         var content = new RichTextBox
         {

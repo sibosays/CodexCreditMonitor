@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms</value></resheader>
+  <data name="Dashboard.AvailableBalance" xml:space="preserve"><value>AVAILABLE CREDIT BALANCE</value></data>
+  <data name="Dashboard.LocalTracking" xml:space="preserve"><value>Local usage tracking</value></data>
+  <data name="Dashboard.RecentSessions" xml:space="preserve"><value>RECENT SESSIONS TODAY</value></data>
+  <data name="Dashboard.Today" xml:space="preserve"><value>TODAY</value></data>
+  <data name="Dashboard.AutoRecharge" xml:space="preserve"><value>AUTO RECHARGE</value></data>
+  <data name="Dashboard.NoData" xml:space="preserve"><value>No data</value></data>
+  <data name="Dashboard.NoSessions" xml:space="preserve"><value>No session activity today.</value></data>
+  <data name="Info.Concept" xml:space="preserve"><value>Concept &amp; Development: C.S.K. (Simon) Bouwens</value></data>
+  <data name="Info.Ai" xml:space="preserve"><value>© 2026 C.S.K. (Simon) Bouwens · Built with AI assistance</value></data>
+</root>
