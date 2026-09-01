@@ -9,8 +9,12 @@ internal static class Program
     private const string AppTitle = "Codex Credit Monitor";
     internal static readonly Icon AppIcon = CreateAppIcon();
 
-    internal static void RestartForLanguageChange()
+    private static MonitorSettings? _settingsForRestart;
+
+    internal static void RestartForLanguageChange(bool reopenDashboard)
     {
+        _settingsForRestart!.ReopenDashboardAfterLanguageChange = reopenDashboard;
+        _settingsForRestart.Save();
         Application.Restart();
     }
     private static string StartupShortcutPath => Path.Combine(
@@ -69,7 +73,14 @@ internal static class Program
         using var showDashboardSignal = new EventWaitHandle(false, EventResetMode.AutoReset, "Local\\CodexCreditMonitor.ShowDashboard");
         var allowClose = false;
         var settings = MonitorSettings.Load();
+        _settingsForRestart = settings;
         Ui.SetLanguage(settings.Language);
+        if (settings.ReopenDashboardAfterLanguageChange)
+        {
+            settings.ReopenDashboardAfterLanguageChange = false;
+            settings.Save();
+            dashboard.Show();
+        }
         var menu = new ContextMenuStrip();
         using var trayIcon = new NotifyIcon
         {
@@ -139,7 +150,7 @@ internal static class Program
                 SetStartupEnabled,
                 SetRefreshInterval,
                 allowStartup: !MonitorSettings.IsPortableMode);
-            settingsForm.ShowDialog();
+            settingsForm.ShowDialog(dashboard.Visible ? dashboard : null);
         }
 
         void ShowInfo()
