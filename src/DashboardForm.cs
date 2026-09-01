@@ -75,7 +75,7 @@ internal sealed class DashboardForm : Form
         header.Controls.AddRange([title, _updated, settings, refresh, _refreshBanner]);
 
         var balanceCard = Card(122);
-        var balanceCaption = NewLabel(11, FontStyle.Regular, Color.FromArgb(168, 185, 205));
+        var balanceCaption = NewLabel(11, FontStyle.Regular, Color.FromArgb(168, 185, 205)) { Name = "balanceCaption" };
         balanceCaption.Text = Ui.S("Dashboard.AvailableBalance");
         balanceCaption.Location = new Point(17, 16);
         balanceCaption.AutoSize = true;
@@ -103,7 +103,7 @@ internal sealed class DashboardForm : Form
         metrics.Controls.AddRange([requestCard, tokenCard]);
 
         var sessionsCard = Card(170);
-        var sessionsHeader = NewLabel(11, FontStyle.Regular, Color.FromArgb(168, 185, 205));
+        var sessionsHeader = NewLabel(11, FontStyle.Regular, Color.FromArgb(168, 185, 205)) { Name = "sessionsHeader" };
         sessionsHeader.Text = Ui.S("Dashboard.RecentSessions");
         sessionsHeader.Location = new Point(17, 14);
         sessionsHeader.AutoSize = true;
@@ -124,6 +124,7 @@ internal sealed class DashboardForm : Form
         };
         _bannerTimer.Tick += (_, _) => _refreshBanner.Visible = false;
         _refreshTimer.Start();
+        Ui.LanguageChanged += OnLanguageChanged;
     }
 
     public async void RefreshUsage(bool notifyWhenComplete = false)
@@ -166,6 +167,17 @@ internal sealed class DashboardForm : Form
     public void SetRefreshInterval(int minutes)
     {
         _refreshTimer.Interval = Math.Clamp(minutes, 1, 5) * 60_000;
+    }
+
+    private void OnLanguageChanged()
+    {
+        if (IsDisposed) return;
+        if (InvokeRequired) { BeginInvoke((Action)OnLanguageChanged); return; }
+        Controls.Find("balanceCaption", true).OfType<Label>().FirstOrDefault()?.Text = Ui.S("Dashboard.AvailableBalance");
+        Controls.Find("sessionsHeader", true).OfType<Label>().FirstOrDefault()?.Text = Ui.S("Dashboard.RecentSessions");
+        _fiveHour.SetLabel(Ui.T("Huidige 5-uursvenster", "Current 5-hour window"));
+        _week.SetLabel(Ui.T("Weekverbruik", "Weekly usage"));
+        if (LatestUsage is { } usage) ApplyUsage(usage);
     }
 
     private void ShowRefreshBanner(string message, Color background, Color foreground, bool hideAfter)
@@ -326,6 +338,7 @@ internal sealed class DashboardForm : Form
     {
         if (disposing)
         {
+            Ui.LanguageChanged -= OnLanguageChanged;
             _sessionWatcher?.Dispose();
             _fileChangeDebounce.Dispose();
         }
@@ -402,7 +415,7 @@ internal sealed class HeaderIconButton : Control
 
 internal sealed class UsageBar : Control
 {
-    private readonly string _label;
+    private string _label;
     private double? _value;
     private string _suffix = "verbruikt";
 
@@ -417,6 +430,12 @@ internal sealed class UsageBar : Control
     {
         _value = value;
         _suffix = suffix;
+        Invalidate();
+    }
+
+    public void SetLabel(string label)
+    {
+        _label = label;
         Invalidate();
     }
 
