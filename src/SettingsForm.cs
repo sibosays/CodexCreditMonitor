@@ -23,24 +23,24 @@ internal sealed class SettingsForm : Form
         _setRefreshInterval = setRefreshInterval;
         _allowStartup = allowStartup;
 
-        Text = "Instellingen · Codex Credit Monitor";
+        Text = $"{Ui.T("Instellingen", "Settings")} · Codex Credit Monitor";
         Icon = Program.AppIcon;
-        ClientSize = new Size(462, 440);
-        MinimumSize = new Size(462, 440);
-        MaximumSize = new Size(462, 440);
+        ClientSize = new Size(462, 522);
+        MinimumSize = new Size(462, 522);
+        MaximumSize = new Size(462, 522);
         StartPosition = FormStartPosition.CenterScreen;
         BackColor = Color.FromArgb(15, 22, 35);
         Font = new Font("Segoe UI", 10);
 
-        var title = Label("Instellingen", 20, FontStyle.Bold, Color.White);
+        var title = Label(Ui.T("Instellingen", "Settings"), 20, FontStyle.Bold, Color.White);
         title.Location = new Point(24, 21);
-        var subtitle = Label("Kies hoe rustig en opvallend de monitor werkt.", 10, FontStyle.Regular, Color.FromArgb(158, 177, 201));
+        var subtitle = Label(Ui.T("Kies hoe rustig en opvallend de monitor werkt.", "Choose how quietly and visibly the monitor works."), 10, FontStyle.Regular, Color.FromArgb(158, 177, 201));
         subtitle.Location = new Point(25, 51);
 
         _startupToggle = new ToggleSwitch { Checked = _startupEnabled(), Location = new Point(365, 24), Enabled = _allowStartup };
         var startup = Card(
-            "Starten met Windows",
-            _allowStartup ? "Start onzichtbaar in het systeemvak na aanmelden." : "Niet beschikbaar in de draagbare editie.",
+            Ui.T("Starten met Windows", "Start with Windows"),
+            _allowStartup ? Ui.T("Start onzichtbaar in het systeemvak na aanmelden.", "Starts hidden in the system tray after sign-in.") : Ui.T("Niet beschikbaar in de draagbare editie.", "Unavailable in the portable edition."),
             84,
             _startupToggle);
         _startupToggle.CheckedChanged += (_, _) =>
@@ -50,9 +50,9 @@ internal sealed class SettingsForm : Form
         };
 
         _alertsToggle = new ToggleSwitch { Checked = _settings.AlertsEnabled, Location = new Point(365, 24) };
-        var alerts = Card("Waarschuwingen bij hoog verbruik", "Toon een duidelijke melding bij 75% en 90% verbruik.", 164, _alertsToggle);
+        var alerts = Card(Ui.T("Waarschuwingen bij hoog verbruik", "High-usage warnings"), Ui.T("Toon een duidelijke melding bij 75% en 90% verbruik.", "Show a clear alert at 75% and 90% usage."), 164, _alertsToggle);
         _soundToggle = new ToggleSwitch { Checked = _settings.AlertSoundEnabled, Location = new Point(365, 24), Enabled = _settings.AlertsEnabled };
-        var sound = Card("Waarschuwingsgeluid", "Speel een kort Windows-signaal bij een verbruikswaarschuwing.", 244, _soundToggle);
+        var sound = Card(Ui.T("Waarschuwingsgeluid", "Alert sound"), Ui.T("Speel een kort Windows-signaal bij een verbruikswaarschuwing.", "Play a short Windows sound with a usage alert."), 244, _soundToggle);
         _soundToggle.CheckedChanged += (_, _) =>
         {
             _settings.AlertSoundEnabled = _soundToggle.Checked;
@@ -66,9 +66,9 @@ internal sealed class SettingsForm : Form
         };
 
         var interval = new SettingsCard { Location = new Point(23, 324), Size = new Size(416, 72) };
-        var intervalTitle = Label("Verversinterval", 11, FontStyle.Bold, Color.FromArgb(229, 238, 249));
+        var intervalTitle = Label(Ui.T("Verversinterval", "Refresh interval"), 11, FontStyle.Bold, Color.FromArgb(229, 238, 249));
         intervalTitle.Location = new Point(16, 14);
-        var intervalDescription = Label("Lees lokale sessies op de achtergrond.", 9, FontStyle.Regular, Color.FromArgb(150, 172, 197));
+        var intervalDescription = Label(Ui.T("Lees lokale sessies op de achtergrond.", "Read local sessions in the background."), 9, FontStyle.Regular, Color.FromArgb(150, 172, 197));
         intervalDescription.Location = new Point(16, 37);
         interval.Controls.AddRange([intervalTitle, intervalDescription]);
         foreach (var minutes in new[] { 1, 2, 5 })
@@ -79,10 +79,25 @@ internal sealed class SettingsForm : Form
             interval.Controls.Add(chip);
         }
 
-        var done = new Button { Text = "Gereed", FlatStyle = FlatStyle.Flat, BackColor = Color.FromArgb(45, 87, 136), ForeColor = Color.White, Location = new Point(339, 405), Size = new Size(100, 30) };
+        var language = new SettingsCard { Location = new Point(23, 404), Size = new Size(416, 72) };
+        var languageTitle = Label(Ui.T("Taal", "Language"), 11, FontStyle.Bold, Color.FromArgb(229, 238, 249));
+        languageTitle.Location = new Point(16, 13);
+        var languageDescription = Label(Ui.T("Wordt actief bij de volgende start.", "Applies the next time the app starts."), 9, FontStyle.Regular, Color.FromArgb(150, 172, 197));
+        languageDescription.Location = new Point(16, 38);
+        var languageChoice = new ComboBox { DropDownStyle = ComboBoxStyle.DropDownList, Location = new Point(215, 21), Size = new Size(184, 25), Font = new Font("Segoe UI", 9) };
+        languageChoice.Items.AddRange(["Automatisch (Windows)", "Nederlands", "English"]);
+        languageChoice.SelectedIndex = _settings.Language switch { "nl" => 1, "en" => 2, _ => 0 };
+        languageChoice.SelectedIndexChanged += (_, _) =>
+        {
+            _settings.Language = languageChoice.SelectedIndex switch { 1 => "nl", 2 => "en", _ => "auto" };
+            _settings.Save();
+        };
+        language.Controls.AddRange([languageTitle, languageDescription, languageChoice]);
+
+        var done = new Button { Text = Ui.T("Gereed", "Done"), FlatStyle = FlatStyle.Flat, BackColor = Color.FromArgb(45, 87, 136), ForeColor = Color.White, Location = new Point(339, 486), Size = new Size(100, 30) };
         done.FlatAppearance.BorderSize = 0;
         done.Click += (_, _) => Close();
-        Controls.AddRange([title, subtitle, startup, alerts, sound, interval, done]);
+        Controls.AddRange([title, subtitle, startup, alerts, sound, interval, language, done]);
     }
 
     private SettingsCard Card(string titleText, string descriptionText, int y, ToggleSwitch toggle)

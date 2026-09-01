@@ -9,8 +9,8 @@ internal sealed class DashboardForm : Form
     private readonly Panel _autoRechargeBadge = new() { BackColor = Color.Transparent, Visible = false };
     private readonly Label _balanceNote = NewLabel(9, FontStyle.Bold, Color.FromArgb(191, 231, 245));
     private readonly Label _updated = NewLabel(10, FontStyle.Regular, Color.FromArgb(155, 172, 194));
-    private readonly UsageBar _fiveHour = new("Huidige 5-uursvenster");
-    private readonly UsageBar _week = new("Weekverbruik");
+    private readonly UsageBar _fiveHour = new(Ui.T("Huidige 5-uursvenster", "Current 5-hour window"));
+    private readonly UsageBar _week = new(Ui.T("Weekverbruik", "Weekly usage"));
     private readonly Label _todayRequests = NewLabel(17, FontStyle.Bold, Color.White);
     private readonly Label _todayTokens = NewLabel(17, FontStyle.Bold, Color.White);
     private readonly FlowLayoutPanel _sessions = new() { FlowDirection = FlowDirection.TopDown, WrapContents = false, AutoScroll = false, BackColor = Color.Transparent };
@@ -59,13 +59,13 @@ internal sealed class DashboardForm : Form
         _updated.Text = "Lokale gebruiksregistratie";
         _updated.Location = new Point(1, 29);
         _updated.AutoSize = true;
-        var refresh = new HeaderIconButton(HeaderIcon.Refresh) { Location = new Point(366, 0), Anchor = AnchorStyles.Top | AnchorStyles.Right, AccessibleName = "Vernieuwen" };
+        var refresh = new HeaderIconButton(HeaderIcon.Refresh) { Location = new Point(366, 0), Anchor = AnchorStyles.Top | AnchorStyles.Right, AccessibleName = Ui.T("Vernieuwen", "Refresh") };
         refresh.Click += (_, _) => RefreshUsage();
-        var settings = new HeaderIconButton(HeaderIcon.Settings) { Location = new Point(322, 0), Anchor = AnchorStyles.Top | AnchorStyles.Right, AccessibleName = "Instellingen" };
+        var settings = new HeaderIconButton(HeaderIcon.Settings) { Location = new Point(322, 0), Anchor = AnchorStyles.Top | AnchorStyles.Right, AccessibleName = Ui.T("Instellingen", "Settings") };
         settings.Click += (_, _) => SettingsRequested?.Invoke();
         var settingsTooltip = new ToolTip();
-        settingsTooltip.SetToolTip(settings, "Instellingen");
-        settingsTooltip.SetToolTip(refresh, "Nu vernieuwen");
+        settingsTooltip.SetToolTip(settings, Ui.T("Instellingen", "Settings"));
+        settingsTooltip.SetToolTip(refresh, Ui.T("Nu vernieuwen", "Refresh now"));
         _refreshBanner.Location = new Point(0, 52);
         _refreshBanner.Width = 262;
         _refreshBanner.Padding = new Padding(9, 3, 8, 2);
@@ -98,8 +98,8 @@ internal sealed class DashboardForm : Form
         bars.Controls.AddRange([_fiveHour, _week]);
 
         var metrics = new Panel { Width = 402, Height = 88, Margin = Padding.Empty, BackColor = Color.Transparent };
-        var requestCard = SmallCard("VANDAAG", "Modelmomenten", _todayRequests, new Point(0, 0));
-        var tokenCard = SmallCard("VANDAAG", "Verwerkte tokens", _todayTokens, new Point(204, 0));
+        var requestCard = SmallCard(Ui.T("VANDAAG", "TODAY"), Ui.T("Modelmomenten", "Model events"), _todayRequests, new Point(0, 0));
+        var tokenCard = SmallCard(Ui.T("VANDAAG", "TODAY"), Ui.T("Verwerkte tokens", "Processed tokens"), _todayTokens, new Point(204, 0));
         metrics.Controls.AddRange([requestCard, tokenCard]);
 
         var sessionsCard = Card(170);
@@ -227,8 +227,8 @@ internal sealed class DashboardForm : Form
         _updated.Text = usage.LastUpdate is DateTimeOffset updated
             ? $"Laatst bijgewerkt {updated.LocalDateTime:HH:mm} · realtime bewaakt"
             : usage.Error ?? "Geen gegevens";
-        _fiveHour.SetValue(usage.FiveHourPercent, "verbruikt");
-        _week.SetValue(usage.WeekPercent, "verbruikt");
+        _fiveHour.SetValue(usage.FiveHourPercent, Ui.T("verbruikt", "used"));
+        _week.SetValue(usage.WeekPercent, Ui.T("verbruikt", "used"));
         _todayRequests.Text = usage.TodayRequests.ToString("N0");
         _todayTokens.Text = FormatTokens(usage.TodayTokens);
         UpdateSessions(usage.RecentSessions);

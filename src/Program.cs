@@ -64,6 +64,7 @@ internal static class Program
         using var showDashboardSignal = new EventWaitHandle(false, EventResetMode.AutoReset, "Local\\CodexCreditMonitor.ShowDashboard");
         var allowClose = false;
         var settings = MonitorSettings.Load();
+        Ui.SetLanguage(settings.Language);
         var menu = new ContextMenuStrip();
         using var trayIcon = new NotifyIcon
         {
@@ -140,15 +141,15 @@ internal static class Program
         {
             var source = Path.Combine(AppContext.BaseDirectory, "WhatsNew.md");
             var message = File.Exists(source)
-                ? File.ReadAllText(source)
-                : "Codex Credit Monitor\n\nInformatie is niet beschikbaar.";
+                ? Ui.SelectInfo(File.ReadAllText(source))
+                : Ui.T("Codex Credit Monitor\n\nInformatie is niet beschikbaar.", "Codex Credit Monitor\n\nInformation is unavailable.");
             var version = typeof(Program).Assembly.GetName().Version?.ToString(2) ?? "—";
             using var info = new InfoForm(version, message);
             info.ShowDialog();
         }
 
-        menu.Items.Add("Dashboard openen", null, (_, _) => ShowDashboard());
-        menu.Items.Add("Nu vernieuwen", null, (_, _) =>
+        menu.Items.Add(Ui.T("Dashboard openen", "Open dashboard"), null, (_, _) => ShowDashboard());
+        menu.Items.Add(Ui.T("Nu vernieuwen", "Refresh now"), null, (_, _) =>
         {
             var notifyWhenComplete = !dashboard.Visible;
             if (notifyWhenComplete && dashboard.LatestUsage is { } latestUsage)
@@ -160,10 +161,10 @@ internal static class Program
             dashboard.RefreshUsage(notifyWhenComplete);
         });
         menu.Items.Add(new ToolStripSeparator());
-        menu.Items.Add("Instellingen…", null, (_, _) => ShowSettings());
-        menu.Items.Add("Info…", null, (_, _) => ShowInfo());
+        menu.Items.Add(Ui.T("Instellingen…", "Settings…"), null, (_, _) => ShowSettings());
+        menu.Items.Add(Ui.T("Info…", "About…"), null, (_, _) => ShowInfo());
         menu.Items.Add(new ToolStripSeparator());
-        menu.Items.Add("Afsluiten", null, (_, _) =>
+        menu.Items.Add(Ui.T("Afsluiten", "Exit"), null, (_, _) =>
         {
             allowClose = true;
             dashboard.Close();

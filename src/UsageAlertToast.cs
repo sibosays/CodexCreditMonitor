@@ -27,7 +27,7 @@ internal sealed class UsageAlertToast : Form
         icon.Location = new Point(23, 18);
         icon.Size = new Size(26, 28);
         icon.TextAlign = ContentAlignment.MiddleCenter;
-        var title = NewLabel("VERBRUIKSWAARSCHUWING", 9, FontStyle.Bold, Color.FromArgb(177, 198, 223));
+        var title = NewLabel(Ui.T("VERBRUIKSWAARSCHUWING", "USAGE WARNING"), 9, FontStyle.Bold, Color.FromArgb(177, 198, 223));
         title.Location = new Point(60, 17);
         var close = NewLabel("×", 17, FontStyle.Regular, Color.FromArgb(171, 190, 212));
         close.Location = new Point(348, 13);
@@ -38,12 +38,12 @@ internal sealed class UsageAlertToast : Form
 
         var percentage = NewLabel($"{percent:0}%", 27, FontStyle.Bold, Color.White);
         percentage.Location = new Point(21, 53);
-        var label = NewLabel("van je huidige\n5-uursvenster", 10, FontStyle.Regular, Color.FromArgb(205, 220, 238));
+        var label = NewLabel(Ui.T("van je huidige\n5-uursvenster", "of your current\n5-hour window"), 10, FontStyle.Regular, Color.FromArgb(205, 220, 238));
         label.Location = new Point(150, 58);
         label.AutoSize = false;
         label.Size = new Size(180, 42);
         var detail = NewLabel(
-            urgent ? "Bijna op. Stel intensieve taken even uit." : "Houd je credits in de gaten.",
+            urgent ? Ui.T("Bijna op. Stel intensieve taken even uit.", "Nearly exhausted. Pause intensive tasks for a moment.") : Ui.T("Houd je credits in de gaten.", "Keep an eye on your credits."),
             9,
             FontStyle.Regular,
             Color.FromArgb(170, 193, 219));

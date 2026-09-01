@@ -35,21 +35,21 @@ internal sealed class RefreshToast : Form
 
         var title = NewLabel("CODEX CREDIT MONITOR", 9, FontStyle.Regular, Color.FromArgb(164, 196, 235));
         title.Location = new Point(14, 12);
-        var updated = NewLabel($"Vernieuwd · {DateTime.Now:HH:mm}", 9, FontStyle.Regular, Color.FromArgb(151, 174, 201));
+        var updated = NewLabel($"{Ui.T("Vernieuwd", "Updated")} · {DateTime.Now:HH:mm}", 9, FontStyle.Regular, Color.FromArgb(151, 174, 201));
         updated.AutoSize = false;
         updated.Location = new Point(192, 12);
         updated.Size = new Size(114, 18);
         updated.TextAlign = ContentAlignment.MiddleRight;
-        var balanceCaption = NewLabel("BESCHIKBAAR", 9, FontStyle.Regular, Color.FromArgb(166, 185, 207));
+        var balanceCaption = NewLabel(Ui.T("BESCHIKBAAR", "AVAILABLE"), 9, FontStyle.Regular, Color.FromArgb(166, 185, 207));
         balanceCaption.Location = new Point(14, 42);
-        var balance = NewLabel(usage.CreditBalance is decimal credits ? $"{credits:N1} credits" : "Nog niet beschikbaar", 19, FontStyle.Bold, Color.White);
+        var balance = NewLabel(usage.CreditBalance is decimal credits ? $"{credits:N1} credits" : Ui.T("Nog niet beschikbaar", "Not available yet"), 19, FontStyle.Bold, Color.White);
         balance.Location = new Point(13, 55);
 
         var line = new Panel { BackColor = Color.FromArgb(53, 73, 97), Location = new Point(14, 91), Size = new Size(292, 1) };
         var divider = new Panel { BackColor = Color.FromArgb(49, 68, 91), Location = new Point(159, 105), Size = new Size(1, 35) };
-        var fiveCaption = FixedLabel("5-UURSVENSTER", 8, FontStyle.Regular, Color.FromArgb(151, 174, 201), new Point(14, 104), new Size(136, 16));
+        var fiveCaption = FixedLabel(Ui.T("5-UURSVENSTER", "5-HOUR WINDOW"), 8, FontStyle.Regular, Color.FromArgb(151, 174, 201), new Point(14, 104), new Size(136, 16));
         var fiveHour = FixedLabel(Percent(usage.FiveHourPercent), 10, FontStyle.Bold, Color.FromArgb(228, 237, 248), new Point(14, 120), new Size(136, 19));
-        var weekCaption = FixedLabel("WEEKVERBRUIK", 8, FontStyle.Regular, Color.FromArgb(151, 174, 201), new Point(172, 104), new Size(134, 16));
+        var weekCaption = FixedLabel(Ui.T("WEEKVERBRUIK", "WEEKLY USAGE"), 8, FontStyle.Regular, Color.FromArgb(151, 174, 201), new Point(172, 104), new Size(134, 16));
         var week = FixedLabel(Percent(usage.WeekPercent), 10, FontStyle.Bold, Color.FromArgb(228, 237, 248), new Point(172, 120), new Size(134, 19));
         var today = FixedLabel($"Vandaag · {usage.TodayRequests:N0} momenten · {Tokens(usage.TodayTokens)}", 8.5f, FontStyle.Regular, Color.FromArgb(157, 181, 210), new Point(14, 149), new Size(292, 16));
         today.AutoEllipsis = true;
@@ -97,7 +97,7 @@ internal sealed class RefreshToast : Form
         BackColor = Color.Transparent
     };
 
-    private static string Percent(double? value) => value is double percent ? $"{percent:0}% verbruikt" : "—";
+    private static string Percent(double? value) => value is double percent ? $"{percent:0}% {Ui.T("verbruikt", "used")}" : "—";
     private static string Tokens(long value) => value >= 1_000_000 ? $"{value / 1_000_000d:0.0}M tokens" : value >= 1_000 ? $"{value / 1_000d:0.0}K tokens" : $"{value:N0} tokens";
 
     private Point LocationNearSystemTray()

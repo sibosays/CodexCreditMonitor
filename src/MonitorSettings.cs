@@ -9,6 +9,7 @@ internal sealed class MonitorSettings
     public int RefreshIntervalMinutes { get; set; } = 2;
     public int AutoRechargeThreshold { get; set; } = 125;
     public int AutoRechargeTarget { get; set; } = 250;
+    public string Language { get; set; } = "auto";
 
     public static bool IsPortableMode => !string.IsNullOrWhiteSpace(
         Environment.GetEnvironmentVariable("CODEX_CREDIT_MONITOR_DATA_DIR"));

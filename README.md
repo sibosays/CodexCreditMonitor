@@ -14,7 +14,7 @@ Een lichte Windows-systeemvakmonitor voor lokaal Codex-gebruik. De app leest all
 
 ## Instellingen
 
-Via het systeemvakmenu **Instellingen…** kies je starten met Windows, waarschuwingen, geluid en een verversinterval van 1, 2 of 5 minuten. **Info…** toont een vaste makerskop met dynamische versieweergave, gevolgd door de actuele inhoud van [`src/WhatsNew.md`](src/WhatsNew.md) uit de appmap.
+Via het systeemvakmenu **Instellingen…** kies je starten met Windows, waarschuwingen, geluid, een verversinterval van 1, 2 of 5 minuten en de taal: automatisch volgens Windows, Nederlands of English. **Info…** toont een vaste makerskop met dynamische versieweergave, gevolgd door de actuele inhoud van [`src/WhatsNew.md`](src/WhatsNew.md) uit de appmap.
 
 ## Distributie
 
