@@ -51,7 +51,7 @@ internal sealed class RefreshToast : Form
         var fiveHour = FixedLabel(Percent(usage.FiveHourPercent), 10, FontStyle.Bold, Color.FromArgb(228, 237, 248), new Point(14, 120), new Size(136, 19));
         var weekCaption = FixedLabel(Ui.T("WEEKVERBRUIK", "WEEKLY USAGE"), 8, FontStyle.Regular, Color.FromArgb(151, 174, 201), new Point(172, 104), new Size(134, 16));
         var week = FixedLabel(Percent(usage.WeekPercent), 10, FontStyle.Bold, Color.FromArgb(228, 237, 248), new Point(172, 120), new Size(134, 19));
-        var today = FixedLabel($"Vandaag · {usage.TodayRequests:N0} momenten · {Tokens(usage.TodayTokens)}", 8.5f, FontStyle.Regular, Color.FromArgb(157, 181, 210), new Point(14, 149), new Size(292, 16));
+        var today = FixedLabel($"{Ui.T("Vandaag", "Today")} · {usage.TodayRequests:N0} {Ui.T("momenten", "events")} · {Tokens(usage.TodayTokens)}", 8.5f, FontStyle.Regular, Color.FromArgb(157, 181, 210), new Point(14, 149), new Size(292, 16));
         today.AutoEllipsis = true;
 
         Controls.AddRange([title, updated, balanceCaption, balance, line, divider, fiveCaption, fiveHour, weekCaption, week, today]);

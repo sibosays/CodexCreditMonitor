@@ -16,6 +16,7 @@ internal static class Ui
         LanguageChanged?.Invoke();
     }
     internal static bool IsEnglish => _language == "en" || (_language == "auto" && CultureInfo.CurrentUICulture.TwoLetterISOLanguageName.Equals("en", StringComparison.OrdinalIgnoreCase));
+    internal static string CurrentLanguage => _language;
     internal static string T(string dutch, string english) => IsEnglish ? english : dutch;
     internal static string S(string key) => Resources.GetString(key, IsEnglish ? CultureInfo.GetCultureInfo("en") : CultureInfo.GetCultureInfo("nl")) ?? key;
 

@@ -4,4 +4,4 @@ Open `CodexCreditMonitorPortable_1.0_Dutch.paf.exe` met het PortableApps Platfor
 
 De PortableApps-editie is self-contained voor 64-bits Windows. Instellingen worden opgeslagen in de `Data`-map van het geïnstalleerde pakket. Windows-opstarten is daarin bewust niet beschikbaar, zodat er geen blijvende wijziging op de hostcomputer wordt gemaakt.
 
-De actuele in-app informatie staat in `WhatsNew.md` en is via **Info…** in het systeemvakmenu zichtbaar.
+De actuele in-app informatie staat in `WhatsNew.md` en is via **Info…** in het systeemvakmenu zichtbaar. De app ondersteunt Nederlands en Engels; de taal wissel je in **Instellingen…** en pas je samen met eventuele andere wijzigingen toe.

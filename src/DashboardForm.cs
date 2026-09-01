@@ -9,8 +9,8 @@ internal sealed class DashboardForm : Form
     private readonly Panel _autoRechargeBadge = new() { BackColor = Color.Transparent, Visible = false };
     private readonly Label _balanceNote = NewLabel(9, FontStyle.Bold, Color.FromArgb(191, 231, 245));
     private readonly Label _updated = NewLabel(10, FontStyle.Regular, Color.FromArgb(155, 172, 194));
-    private readonly UsageBar _fiveHour = new(Ui.T("Huidige 5-uursvenster", "Current 5-hour window"));
-    private readonly UsageBar _week = new(Ui.T("Weekverbruik", "Weekly usage"));
+    private readonly UsageBar _fiveHour = new(Ui.S("Dashboard.CurrentWindow"));
+    private readonly UsageBar _week = new(Ui.S("Dashboard.WeeklyUsage"));
     private readonly Label _todayRequests = NewLabel(17, FontStyle.Bold, Color.White);
     private readonly Label _todayTokens = NewLabel(17, FontStyle.Bold, Color.White);
     private readonly FlowLayoutPanel _sessions = new() { FlowDirection = FlowDirection.TopDown, WrapContents = false, AutoScroll = false, BackColor = Color.Transparent };
@@ -99,8 +99,8 @@ internal sealed class DashboardForm : Form
         bars.Controls.AddRange([_fiveHour, _week]);
 
         var metrics = new Panel { Width = 402, Height = 88, Margin = Padding.Empty, BackColor = Color.Transparent };
-        var requestCard = SmallCard(Ui.T("VANDAAG", "TODAY"), Ui.T("Modelmomenten", "Model events"), _todayRequests, new Point(0, 0));
-        var tokenCard = SmallCard(Ui.T("VANDAAG", "TODAY"), Ui.T("Verwerkte tokens", "Processed tokens"), _todayTokens, new Point(204, 0));
+        var requestCard = SmallCard(Ui.S("Dashboard.Today"), Ui.S("Dashboard.ModelEvents"), _todayRequests, new Point(0, 0));
+        var tokenCard = SmallCard(Ui.S("Dashboard.Today"), Ui.S("Dashboard.ProcessedTokens"), _todayTokens, new Point(204, 0));
         requestCard.Name = "requestCard";
         tokenCard.Name = "tokenCard";
         metrics.Controls.AddRange([requestCard, tokenCard]);
@@ -142,23 +142,23 @@ internal sealed class DashboardForm : Form
         }
         _isRefreshing = true;
         _notifyWhenCurrentRefreshCompletes = notifyWhenComplete;
-        _updated.Text = Ui.T("Lokale sessies veilig op de achtergrond vernieuwen…", "Refreshing local sessions safely in the background…");
-        ShowRefreshBanner(Ui.T("Vernieuwen…", "Refreshing…"), Color.Transparent, Color.FromArgb(171, 202, 242), hideAfter: false);
+        _updated.Text = Ui.S("Dashboard.RefreshingLocal");
+        ShowRefreshBanner(Ui.S("Dashboard.Refreshing"), Color.Transparent, Color.FromArgb(171, 202, 242), hideAfter: false);
         try
         {
             var usage = await Task.Run(UsageReader.Read);
             if (IsDisposed) return;
             ApplyUsage(usage);
-            ShowRefreshBanner($"Vernieuwd · {DateTime.Now:HH:mm:ss}", Color.Transparent, Color.FromArgb(130, 208, 174), hideAfter: true);
+            ShowRefreshBanner($"{Ui.S("Dashboard.Refreshed")} · {DateTime.Now:HH:mm:ss}", Color.Transparent, Color.FromArgb(130, 208, 174), hideAfter: true);
             if (_notifyWhenCurrentRefreshCompletes) RefreshCompleted?.Invoke(usage, null);
         }
         catch (Exception)
         {
             if (!IsDisposed)
             {
-                _updated.Text = "Vernieuwen is niet gelukt — probeer het opnieuw.";
-                ShowRefreshBanner("Vernieuwen is niet gelukt", Color.Transparent, Color.FromArgb(244, 155, 159), hideAfter: true);
-                if (_notifyWhenCurrentRefreshCompletes) RefreshCompleted?.Invoke(null, "Vernieuwen is niet gelukt.");
+                _updated.Text = Ui.S("Dashboard.RefreshFailed");
+                ShowRefreshBanner(Ui.S("Dashboard.RefreshFailed"), Color.Transparent, Color.FromArgb(244, 155, 159), hideAfter: true);
+                if (_notifyWhenCurrentRefreshCompletes) RefreshCompleted?.Invoke(null, Ui.S("Dashboard.RefreshFailed"));
             }
         }
         finally
@@ -181,11 +181,19 @@ internal sealed class DashboardForm : Form
         if (balanceCaption is not null) balanceCaption.Text = Ui.S("Dashboard.AvailableBalance");
         var sessionsHeader = Controls.Find("sessionsHeader", true).OfType<Label>().FirstOrDefault();
         if (sessionsHeader is not null) sessionsHeader.Text = Ui.S("Dashboard.RecentSessions");
-        UpdateMetricCard("requestCard", Ui.T("VANDAAG", "TODAY"), Ui.T("Modelmomenten", "Model events"));
-        UpdateMetricCard("tokenCard", Ui.T("VANDAAG", "TODAY"), Ui.T("Verwerkte tokens", "Processed tokens"));
-        _fiveHour.SetLabel(Ui.T("Huidige 5-uursvenster", "Current 5-hour window"));
-        _week.SetLabel(Ui.T("Weekverbruik", "Weekly usage"));
-        if (LatestUsage is { } usage) ApplyUsage(usage);
+        UpdateMetricCard("requestCard", Ui.S("Dashboard.Today"), Ui.S("Dashboard.ModelEvents"));
+        UpdateMetricCard("tokenCard", Ui.S("Dashboard.Today"), Ui.S("Dashboard.ProcessedTokens"));
+        _fiveHour.SetLabel(Ui.S("Dashboard.CurrentWindow"));
+        _week.SetLabel(Ui.S("Dashboard.WeeklyUsage"));
+        if (_isRefreshing)
+        {
+            _updated.Text = Ui.S("Dashboard.RefreshingLocal");
+            _refreshBannerText.Text = Ui.S("Dashboard.Refreshing");
+        }
+        else if (LatestUsage is { } usage)
+            ApplyUsage(usage);
+        else
+            _updated.Text = Ui.S("Dashboard.LocalTracking");
     }
 
     private void UpdateMetricCard(string name, string eyebrow, string caption)
@@ -250,13 +258,13 @@ internal sealed class DashboardForm : Form
     private void ApplyUsage(UsageSummary usage)
     {
         LatestUsage = usage;
-        _balance.Text = usage.CreditBalance is decimal balance ? $"{balance:N1} credits" : Ui.T("Nog niet beschikbaar", "Not available yet");
+        _balance.Text = usage.CreditBalance is decimal balance ? $"{balance:N1} credits" : Ui.S("Dashboard.NotAvailable");
         UpdateBalanceNote();
         _updated.Text = usage.LastUpdate is DateTimeOffset updated
-            ? $"Laatst bijgewerkt {updated.LocalDateTime:HH:mm} · realtime bewaakt"
+            ? string.Format(Ui.S("Dashboard.UpdatedAt"), updated.LocalDateTime.ToString("HH:mm"))
             : usage.Error ?? Ui.S("Dashboard.NoData");
-        _fiveHour.SetValue(usage.FiveHourPercent, Ui.T("verbruikt", "used"));
-        _week.SetValue(usage.WeekPercent, Ui.T("verbruikt", "used"));
+        _fiveHour.SetValue(usage.FiveHourPercent, Ui.S("Dashboard.Used"));
+        _week.SetValue(usage.WeekPercent, Ui.S("Dashboard.Used"));
         _todayRequests.Text = usage.TodayRequests.ToString("N0");
         _todayTokens.Text = FormatTokens(usage.TodayTokens);
         UpdateSessions(usage.RecentSessions);
@@ -433,7 +441,7 @@ internal sealed class UsageBar : Control
 {
     private string _label;
     private double? _value;
-    private string _suffix = "verbruikt";
+    private string _suffix = "";
 
     public UsageBar(string label)
     {
@@ -464,7 +472,7 @@ internal sealed class UsageBar : Control
         using var labelBrush = new SolidBrush(Color.FromArgb(214, 226, 241));
         using var mutedBrush = new SolidBrush(Color.FromArgb(151, 170, 193));
         e.Graphics.DrawString(_label, labelFont, labelBrush, 0, 0);
-        var text = _value is double value ? $"{value:0}% {_suffix}" : "nog niet beschikbaar";
+        var text = _value is double value ? $"{value:0}% {_suffix}" : Ui.S("Dashboard.NotAvailable");
         var size = e.Graphics.MeasureString(text, valueFont);
         e.Graphics.DrawString(text, valueFont, mutedBrush, Width - size.Width, 0);
         var bar = new RectangleF(0, 28, Width, 10);

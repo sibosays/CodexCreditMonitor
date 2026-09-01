@@ -217,7 +217,7 @@ internal static class Program
             activeRefreshToast?.Close();
             activeRefreshToast = usage is not null
                 ? new RefreshToast(usage)
-                : new RefreshToast(error ?? "Vernieuwen is niet gelukt.", false);
+                : new RefreshToast(error ?? Ui.S("Dashboard.RefreshFailed"), false);
             activeRefreshToast.Show();
         };
         dashboard.FormClosing += (_, eventArgs) =>

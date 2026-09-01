@@ -14,8 +14,10 @@ internal sealed class SettingsForm : Form
     private readonly ToggleSwitch _alertsToggle;
     private readonly ToggleSwitch _soundToggle;
     private readonly List<ChoiceChip> _intervalChoices = [];
+    private readonly Button _applyButton;
     private ComboBox? _languageChoice;
-    private bool _languageChanged;
+    private int _selectedInterval;
+    private bool _hasChanges;
 
     public SettingsForm(MonitorSettings settings, Func<bool> startupEnabled, Func<bool, bool> setStartupEnabled, Action<int> setRefreshInterval, bool allowStartup)
     {
@@ -24,10 +26,13 @@ internal sealed class SettingsForm : Form
         _setStartupEnabled = setStartupEnabled;
         _setRefreshInterval = setRefreshInterval;
         _allowStartup = allowStartup;
+        _selectedInterval = Math.Clamp(_settings.RefreshIntervalMinutes, 1, 5);
 
         Text = $"{Ui.T("Instellingen", "Settings")} · Codex Credit Monitor";
         Icon = Program.AppIcon;
-        ClientSize = new Size(462, 532);
+        ClientSize = new Size(462, 536);
+        MinimumSize = Size;
+        MaximumSize = Size;
         FormBorderStyle = FormBorderStyle.FixedDialog;
         StartPosition = FormStartPosition.CenterScreen;
         BackColor = Color.FromArgb(15, 22, 35);
@@ -44,11 +49,7 @@ internal sealed class SettingsForm : Form
             _allowStartup ? Ui.T("Start onzichtbaar in het systeemvak na aanmelden.", "Starts hidden in the system tray after sign-in.") : Ui.T("Niet beschikbaar in de draagbare editie.", "Unavailable in the portable edition."),
             84,
             _startupToggle);
-        _startupToggle.CheckedChanged += (_, _) =>
-        {
-            if (!_allowStartup || _startupToggle.Checked == _startupEnabled()) return;
-            if (!_setStartupEnabled(_startupToggle.Checked)) _startupToggle.Checked = _startupEnabled();
-        };
+        _startupToggle.CheckedChanged += (_, _) => MarkChanges();
 
         _alertsToggle = new ToggleSwitch { Checked = _settings.AlertsEnabled, Location = new Point(365, 24) };
         var alerts = Card(Ui.T("Waarschuwingen bij hoog verbruik", "High-usage warnings"), Ui.T("Toon een duidelijke melding bij 75% en 90% verbruik.", "Show a clear alert at 75% and 90% usage."), 164, _alertsToggle);
@@ -56,14 +57,12 @@ internal sealed class SettingsForm : Form
         var sound = Card(Ui.T("Waarschuwingsgeluid", "Alert sound"), Ui.T("Speel een kort Windows-signaal bij een verbruikswaarschuwing.", "Play a short Windows sound with a usage alert."), 244, _soundToggle);
         _soundToggle.CheckedChanged += (_, _) =>
         {
-            _settings.AlertSoundEnabled = _soundToggle.Checked;
-            _settings.Save();
+            MarkChanges();
         };
         _alertsToggle.CheckedChanged += (_, _) =>
         {
-            _settings.AlertsEnabled = _alertsToggle.Checked;
             _soundToggle.Enabled = _alertsToggle.Checked;
-            _settings.Save();
+            MarkChanges();
         };
 
         var interval = new SettingsCard { Location = new Point(23, 324), Size = new Size(416, 72) };
@@ -74,31 +73,30 @@ internal sealed class SettingsForm : Form
         interval.Controls.AddRange([intervalTitle, intervalDescription]);
         foreach (var minutes in new[] { 1, 2, 5 })
         {
-            var chip = new ChoiceChip($"{minutes} min.") { Location = new Point(250 + (minutes == 1 ? 0 : minutes == 2 ? 53 : 106), 20), Selected = _settings.RefreshIntervalMinutes == minutes };
+            var chip = new ChoiceChip($"{minutes} min.") { Location = new Point(250 + (minutes == 1 ? 0 : minutes == 2 ? 53 : 106), 20), Selected = _selectedInterval == minutes };
             chip.Click += (_, _) => SetInterval(minutes);
             _intervalChoices.Add(chip);
             interval.Controls.Add(chip);
         }
 
-        var apply = new Button { Text = Ui.T("Toepassen", "Apply"), FlatStyle = FlatStyle.Flat, BackColor = Color.FromArgb(45, 87, 136), ForeColor = Color.White, Location = new Point(321, 490), Size = new Size(118, 30), Enabled = false };
-        apply.FlatAppearance.BorderSize = 0;
-        apply.Click += (_, _) => ApplyLanguage();
+        _applyButton = new Button { Text = Ui.T("Toepassen", "Apply"), FlatStyle = FlatStyle.Flat, BackColor = Color.FromArgb(45, 87, 136), ForeColor = Color.White, Location = new Point(321, 490), Size = new Size(118, 30), Enabled = false };
+        _applyButton.FlatAppearance.BorderSize = 0;
+        _applyButton.Click += (_, _) => ApplyChanges();
         var language = new SettingsCard { Location = new Point(23, 404), Size = new Size(416, 72) };
         var languageTitle = Label(Ui.T("Taal", "Language"), 11, FontStyle.Bold, Color.FromArgb(229, 238, 249));
         languageTitle.Location = new Point(16, 13);
-        var languageDescription = Label(Ui.T("Wordt direct toegepast.", "Applies immediately."), 8.5f, FontStyle.Regular, Color.FromArgb(150, 172, 197));
+        var languageDescription = Label(Ui.T("Pas alle wijzigingen samen toe.", "Apply all changes together."), 8.5f, FontStyle.Regular, Color.FromArgb(150, 172, 197));
         languageDescription.Location = new Point(16, 46);
         _languageChoice = new ComboBox { DropDownStyle = ComboBoxStyle.DropDownList, Location = new Point(215, 21), Size = new Size(184, 25), Font = new Font("Segoe UI", 9) };
         _languageChoice.Items.AddRange(["Automatisch (Windows)", "Nederlands", "English"]);
         _languageChoice.SelectedIndex = _settings.Language switch { "nl" => 1, "en" => 2, _ => 0 };
         _languageChoice.SelectedIndexChanged += (_, _) =>
         {
-            _languageChanged = SelectedLanguage() != _settings.Language;
-            apply.Enabled = _languageChanged;
+            MarkChanges();
         };
         language.Controls.AddRange([languageTitle, languageDescription, _languageChoice]);
 
-        Controls.AddRange([title, subtitle, startup, alerts, sound, interval, language, apply]);
+        Controls.AddRange([title, subtitle, startup, alerts, sound, interval, language, _applyButton]);
     }
 
     private SettingsCard Card(string titleText, string descriptionText, int y, ToggleSwitch toggle)
@@ -115,20 +113,41 @@ internal sealed class SettingsForm : Form
 
     private void SetInterval(int minutes)
     {
-        _setRefreshInterval(minutes);
+        _selectedInterval = minutes;
         foreach (var chip in _intervalChoices) chip.Selected = chip.Text == $"{minutes} min.";
+        MarkChanges();
     }
 
     private string SelectedLanguage() => _languageChoice?.SelectedIndex switch { 1 => "nl", 2 => "en", _ => "auto" };
 
-    private void ApplyLanguage()
+    private void MarkChanges()
     {
-        if (!_languageChanged) return;
+        if (IsHandleCreated)
+        {
+            _hasChanges = _selectedInterval != _settings.RefreshIntervalMinutes
+                || _alertsToggle.Checked != _settings.AlertsEnabled
+                || _soundToggle.Checked != _settings.AlertSoundEnabled
+                || SelectedLanguage() != _settings.Language
+                || (_allowStartup && _startupToggle.Checked != _startupEnabled());
+            _applyButton.Enabled = _hasChanges;
+        }
+    }
+
+    private void ApplyChanges()
+    {
+        if (!_hasChanges) return;
         var language = SelectedLanguage();
+        if (_allowStartup && _startupToggle.Checked != _startupEnabled() && !_setStartupEnabled(_startupToggle.Checked))
+            _startupToggle.Checked = _startupEnabled();
+
+        _settings.AlertsEnabled = _alertsToggle.Checked;
+        _settings.AlertSoundEnabled = _soundToggle.Checked;
+        _settings.RefreshIntervalMinutes = _selectedInterval;
         _settings.Language = language;
         _settings.Save();
-        Ui.SetLanguage(language);
-        _languageChanged = false;
+        _setRefreshInterval(_selectedInterval);
+        if (language != _settings.Language || !string.Equals(language, Ui.CurrentLanguage, StringComparison.Ordinal))
+            Ui.SetLanguage(language);
         Close();
     }
 
