@@ -1,4 +1,4 @@
-# Codex Credit Monitor 1.2
+# Codex Credit Monitor 1.0
 
 ## Nieuw in deze versie
 
@@ -7,6 +7,7 @@
 - Vernieuwen tijdens een lopende meting blijft gekoppeld aan dat ene resultaat; er ontstaan geen stapels meldingen.
 - Transparante icoonknoppen, uitgelijnde Vandaag-kaarten en rustige statusregels zijn behouden.
 - PortableApps-pakket vernieuwd; instellingen blijven binnen de draagbare pakketmap.
+- Het infoscherm heeft nu een vaste, verzorgde makerskop met dynamische versieweergave.
 
 ## Gebruik
 

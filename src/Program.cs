@@ -142,7 +142,9 @@ internal static class Program
             var message = File.Exists(source)
                 ? File.ReadAllText(source)
                 : "Codex Credit Monitor\n\nInformatie is niet beschikbaar.";
-            MessageBox.Show(message, $"{AppTitle} · Info", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            var version = typeof(Program).Assembly.GetName().Version?.ToString(2) ?? "—";
+            using var info = new InfoForm(version, message);
+            info.ShowDialog();
         }
 
         menu.Items.Add("Dashboard openen", null, (_, _) => ShowDashboard());

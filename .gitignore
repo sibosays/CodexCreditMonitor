@@ -9,4 +9,4 @@
 
 # Bewaar alleen het actuele distributiepakket
 /Distributie/PortableApps/*.paf.exe
-!/Distributie/PortableApps/CodexCreditMonitorPortable_1.2_Dutch.paf.exe
+!/Distributie/PortableApps/CodexCreditMonitorPortable_1.0_Dutch.paf.exe

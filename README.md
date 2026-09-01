@@ -1,4 +1,4 @@
-# Codex Credit Monitor 1.2
+# Codex Credit Monitor 1.0
 
 Een lichte Windows-systeemvakmonitor voor lokaal Codex-gebruik. De app leest alleen de sessieregistratie van de aangemelde Windows-gebruiker en verstuurt geen gegevens.
 
@@ -14,11 +14,11 @@ Een lichte Windows-systeemvakmonitor voor lokaal Codex-gebruik. De app leest all
 
 ## Instellingen
 
-Via het systeemvakmenu **Instellingen…** kies je starten met Windows, waarschuwingen, geluid en een verversinterval van 1, 2 of 5 minuten. **Info…** leest de actuele inhoud van [`src/WhatsNew.md`](src/WhatsNew.md) rechtstreeks uit de appmap.
+Via het systeemvakmenu **Instellingen…** kies je starten met Windows, waarschuwingen, geluid en een verversinterval van 1, 2 of 5 minuten. **Info…** toont een vaste makerskop met dynamische versieweergave, gevolgd door de actuele inhoud van [`src/WhatsNew.md`](src/WhatsNew.md) uit de appmap.
 
 ## Distributie
 
 - Lokale app: `app\CodexCreditMonitor.exe` (vereist de .NET Desktop Runtime).
-- Draagbare installatie: `Distributie\PortableApps\CodexCreditMonitorPortable_1.2_Dutch.paf.exe`.
+- Draagbare installatie: `Distributie\PortableApps\CodexCreditMonitorPortable_1.0_Dutch.paf.exe`.
 
 De PortableApps-versie bewaart haar instellingen in de pakketmap en biedt daarom geen Windows-opstartoptie. Dit document beschrijft uitsluitend de actuele versie; er is geen aparte versiegeschiedenis.
