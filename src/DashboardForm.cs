@@ -124,6 +124,7 @@ internal sealed class DashboardForm : Form
         };
         _bannerTimer.Tick += (_, _) => _refreshBanner.Visible = false;
         _refreshTimer.Start();
+        Ui.LanguageChanged += RefreshUsage;
     }
 
     public async void RefreshUsage(bool notifyWhenComplete = false)
@@ -326,6 +327,7 @@ internal sealed class DashboardForm : Form
     {
         if (disposing)
         {
+            Ui.LanguageChanged -= RefreshUsage;
             _sessionWatcher?.Dispose();
             _fileChangeDebounce.Dispose();
         }

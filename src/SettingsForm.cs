@@ -128,7 +128,8 @@ internal sealed class SettingsForm : Form
         _settings.Language = language;
         _settings.Save();
         Ui.SetLanguage(language);
-        Program.RestartForLanguageChange(Owner is DashboardForm { Visible: true });
+        _languageChanged = false;
+        Close();
     }
 
     private static Label Label(string text, float size, FontStyle style, Color color) => new()
