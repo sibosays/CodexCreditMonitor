@@ -1,0 +1,12 @@
+# Tijdelijke en reproduceerbare bouwuitvoer
+/app/
+/build/
+/src/bin/
+/src/obj/
+
+# Lokaal geïnstalleerde PortableApps-bouwgereedschappen
+/tools/
+
+# Bewaar alleen het actuele distributiepakket
+/Distributie/PortableApps/*.paf.exe
+!/Distributie/PortableApps/CodexCreditMonitorPortable_1.2_Dutch.paf.exe

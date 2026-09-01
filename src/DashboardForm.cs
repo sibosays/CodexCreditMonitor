@@ -1,0 +1,458 @@
+using System.Drawing.Drawing2D;
+using System.ComponentModel;
+
+namespace CodexCreditMonitor;
+
+internal sealed class DashboardForm : Form
+{
+    private readonly Label _balance = NewLabel(27, FontStyle.Bold, Color.White);
+    private readonly Panel _autoRechargeBadge = new() { BackColor = Color.Transparent, Visible = false };
+    private readonly Label _balanceNote = NewLabel(9, FontStyle.Bold, Color.FromArgb(191, 231, 245));
+    private readonly Label _updated = NewLabel(10, FontStyle.Regular, Color.FromArgb(155, 172, 194));
+    private readonly UsageBar _fiveHour = new("Huidige 5-uursvenster");
+    private readonly UsageBar _week = new("Weekverbruik");
+    private readonly Label _todayRequests = NewLabel(17, FontStyle.Bold, Color.White);
+    private readonly Label _todayTokens = NewLabel(17, FontStyle.Bold, Color.White);
+    private readonly FlowLayoutPanel _sessions = new() { FlowDirection = FlowDirection.TopDown, WrapContents = false, AutoScroll = false, BackColor = Color.Transparent };
+    // Keep the monitor unobtrusive when it stays open: refresh only every two minutes.
+    private readonly System.Windows.Forms.Timer _refreshTimer = new() { Interval = 120_000 };
+    // A burst of Codex log activity yields at most one additional low-priority read per minute.
+    private readonly System.Windows.Forms.Timer _fileChangeDebounce = new() { Interval = 60_000 };
+    private readonly System.Windows.Forms.Timer _bannerTimer = new() { Interval = 5_000 };
+    private readonly Panel _refreshBanner = new() { Height = 24, BackColor = Color.Transparent, Visible = false };
+    private readonly Label _refreshBannerText = NewLabel(9, FontStyle.Bold, Color.FromArgb(220, 238, 255));
+    private double? _lastWarnedPercent;
+    private bool _isRefreshing;
+    private bool _notifyWhenCurrentRefreshCompletes;
+    private int _autoRechargeThreshold;
+    private int _autoRechargeTarget;
+    private FileSystemWatcher? _sessionWatcher;
+
+    public event Action<double>? WarningRaised;
+    public event Action<UsageSummary?, string?>? RefreshCompleted;
+    public event Action? SettingsRequested;
+    [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+    internal UsageSummary? LatestUsage { get; private set; }
+
+    public DashboardForm()
+    {
+        Text = "Codex Credit Monitor";
+        Icon = Program.AppIcon;
+        ClientSize = new Size(450, 700);
+        MinimumSize = new Size(420, 700);
+        MaximizeBox = false;
+        StartPosition = FormStartPosition.CenterScreen;
+        BackColor = Color.FromArgb(15, 22, 35);
+        Font = new Font("Segoe UI", 10);
+
+        var root = new Panel { Dock = DockStyle.Fill, Padding = new Padding(22, 20, 22, 18), BackColor = BackColor };
+        root.Paint += DrawBackground;
+        Controls.Add(root);
+
+        // FlowLayoutPanel does not honor Dock sizing for child controls; make the header
+        // explicitly as wide as the cards so the controls on its right stay visible.
+        var header = new Panel { Width = 402, Height = 94, Margin = Padding.Empty, BackColor = Color.Transparent };
+        var title = NewLabel(18, FontStyle.Bold, Color.White);
+        title.Text = "Codex Credit Monitor";
+        title.Location = new Point(0, 0);
+        title.AutoSize = true;
+        _updated.Text = "Lokale gebruiksregistratie";
+        _updated.Location = new Point(1, 29);
+        _updated.AutoSize = true;
+        var refresh = new HeaderIconButton(HeaderIcon.Refresh) { Location = new Point(366, 0), Anchor = AnchorStyles.Top | AnchorStyles.Right, AccessibleName = "Vernieuwen" };
+        refresh.Click += (_, _) => RefreshUsage();
+        var settings = new HeaderIconButton(HeaderIcon.Settings) { Location = new Point(322, 0), Anchor = AnchorStyles.Top | AnchorStyles.Right, AccessibleName = "Instellingen" };
+        settings.Click += (_, _) => SettingsRequested?.Invoke();
+        var settingsTooltip = new ToolTip();
+        settingsTooltip.SetToolTip(settings, "Instellingen");
+        settingsTooltip.SetToolTip(refresh, "Nu vernieuwen");
+        _refreshBanner.Location = new Point(0, 52);
+        _refreshBanner.Width = 262;
+        _refreshBanner.Padding = new Padding(9, 3, 8, 2);
+        _refreshBannerText.Dock = DockStyle.Fill;
+        _refreshBannerText.TextAlign = ContentAlignment.MiddleLeft;
+        _refreshBanner.Controls.Add(_refreshBannerText);
+        header.Controls.AddRange([title, _updated, settings, refresh, _refreshBanner]);
+
+        var balanceCard = Card(122);
+        var balanceCaption = NewLabel(11, FontStyle.Regular, Color.FromArgb(168, 185, 205));
+        balanceCaption.Text = "BESCHIKBAAR CREDITTEGOED";
+        balanceCaption.Location = new Point(17, 16);
+        balanceCaption.AutoSize = true;
+        _balance.Location = new Point(16, 36);
+        _balance.Text = "—";
+        _balance.AutoSize = true;
+        _autoRechargeBadge.Location = new Point(16, 85);
+        _autoRechargeBadge.Size = new Size(267, 23);
+        _autoRechargeBadge.Padding = new Padding(9, 3, 8, 2);
+        _balanceNote.Dock = DockStyle.Fill;
+        _balanceNote.TextAlign = ContentAlignment.MiddleLeft;
+        _autoRechargeBadge.Controls.Add(_balanceNote);
+        balanceCard.Controls.AddRange([balanceCaption, _balance, _autoRechargeBadge]);
+
+        var bars = Card(142);
+        _fiveHour.Location = new Point(17, 14);
+        _fiveHour.Width = 350;
+        _week.Location = new Point(17, 77);
+        _week.Width = 350;
+        bars.Controls.AddRange([_fiveHour, _week]);
+
+        var metrics = new Panel { Width = 402, Height = 88, Margin = Padding.Empty, BackColor = Color.Transparent };
+        var requestCard = SmallCard("VANDAAG", "Modelmomenten", _todayRequests, new Point(0, 0));
+        var tokenCard = SmallCard("VANDAAG", "Verwerkte tokens", _todayTokens, new Point(204, 0));
+        metrics.Controls.AddRange([requestCard, tokenCard]);
+
+        var sessionsCard = Card(170);
+        var sessionsHeader = NewLabel(11, FontStyle.Regular, Color.FromArgb(168, 185, 205));
+        sessionsHeader.Text = "RECENTE SESSIES VANDAAG";
+        sessionsHeader.Location = new Point(17, 14);
+        sessionsHeader.AutoSize = true;
+        _sessions.Location = new Point(12, 38);
+        _sessions.Size = new Size(382, 116);
+        _sessions.AutoScroll = false;
+        sessionsCard.Controls.AddRange([sessionsHeader, _sessions]);
+
+        var stack = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.TopDown, WrapContents = false, AutoScroll = false, BackColor = Color.Transparent, Padding = new Padding(0) };
+        stack.Controls.AddRange([header, Spacer(6), balanceCard, Spacer(12), bars, Spacer(12), metrics, Spacer(6), sessionsCard]);
+        root.Controls.Add(stack);
+
+        _refreshTimer.Tick += (_, _) => RefreshUsage();
+        _fileChangeDebounce.Tick += (_, _) =>
+        {
+            _fileChangeDebounce.Stop();
+            RefreshUsage();
+        };
+        _bannerTimer.Tick += (_, _) => _refreshBanner.Visible = false;
+        _refreshTimer.Start();
+    }
+
+    public async void RefreshUsage(bool notifyWhenComplete = false)
+    {
+        if (IsDisposed) return;
+        if (_isRefreshing)
+        {
+            // A tray refresh during the initial/background read must still receive its mini-widget result.
+            _notifyWhenCurrentRefreshCompletes |= notifyWhenComplete;
+            return;
+        }
+        _isRefreshing = true;
+        _notifyWhenCurrentRefreshCompletes = notifyWhenComplete;
+        _updated.Text = "Lokale sessies veilig op de achtergrond vernieuwen…";
+        ShowRefreshBanner("Vernieuwen…", Color.Transparent, Color.FromArgb(171, 202, 242), hideAfter: false);
+        try
+        {
+            var usage = await Task.Run(UsageReader.Read);
+            if (IsDisposed) return;
+            ApplyUsage(usage);
+            ShowRefreshBanner($"Vernieuwd · {DateTime.Now:HH:mm:ss}", Color.Transparent, Color.FromArgb(130, 208, 174), hideAfter: true);
+            if (_notifyWhenCurrentRefreshCompletes) RefreshCompleted?.Invoke(usage, null);
+        }
+        catch (Exception)
+        {
+            if (!IsDisposed)
+            {
+                _updated.Text = "Vernieuwen is niet gelukt — probeer het opnieuw.";
+                ShowRefreshBanner("Vernieuwen is niet gelukt", Color.Transparent, Color.FromArgb(244, 155, 159), hideAfter: true);
+                if (_notifyWhenCurrentRefreshCompletes) RefreshCompleted?.Invoke(null, "Vernieuwen is niet gelukt.");
+            }
+        }
+        finally
+        {
+            _notifyWhenCurrentRefreshCompletes = false;
+            _isRefreshing = false;
+        }
+    }
+
+    public void SetRefreshInterval(int minutes)
+    {
+        _refreshTimer.Interval = Math.Clamp(minutes, 1, 5) * 60_000;
+    }
+
+    private void ShowRefreshBanner(string message, Color background, Color foreground, bool hideAfter)
+    {
+        _bannerTimer.Stop();
+        _refreshBanner.BackColor = background;
+        _refreshBannerText.ForeColor = foreground;
+        _refreshBannerText.Text = message;
+        _refreshBanner.Visible = true;
+        if (hideAfter) _bannerTimer.Start();
+    }
+
+    public void SetAutoRecharge(int threshold, int target)
+    {
+        _autoRechargeThreshold = threshold;
+        _autoRechargeTarget = target;
+        UpdateBalanceNote();
+    }
+
+    public void StartRealtimeMonitoring()
+    {
+        if (_sessionWatcher is not null) return;
+        var sessionsRoot = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".codex", "sessions");
+        if (!Directory.Exists(sessionsRoot)) return;
+
+        _sessionWatcher = new FileSystemWatcher(sessionsRoot, "*.jsonl")
+        {
+            IncludeSubdirectories = true,
+            NotifyFilter = NotifyFilters.FileName | NotifyFilters.LastWrite | NotifyFilters.Size,
+            EnableRaisingEvents = true
+        };
+        _sessionWatcher.Changed += QueueRealtimeRefresh;
+        _sessionWatcher.Created += QueueRealtimeRefresh;
+        _sessionWatcher.Renamed += QueueRealtimeRefresh;
+    }
+
+    private void QueueRealtimeRefresh(object? sender, FileSystemEventArgs eventArgs)
+    {
+        if (IsDisposed || !IsHandleCreated) return;
+        try
+        {
+            BeginInvoke((Action)(() =>
+            {
+                // At most one read per activity burst: responsive without polling pressure.
+                if (!_fileChangeDebounce.Enabled) _fileChangeDebounce.Start();
+            }));
+        }
+        catch (InvalidOperationException)
+        {
+            // The monitor is shutting down.
+        }
+    }
+
+    private void ApplyUsage(UsageSummary usage)
+    {
+        LatestUsage = usage;
+        _balance.Text = usage.CreditBalance is decimal balance ? $"{balance:N1} credits" : "Nog niet beschikbaar";
+        UpdateBalanceNote();
+        _updated.Text = usage.LastUpdate is DateTimeOffset updated
+            ? $"Laatst bijgewerkt {updated.LocalDateTime:HH:mm} · realtime bewaakt"
+            : usage.Error ?? "Geen gegevens";
+        _fiveHour.SetValue(usage.FiveHourPercent, "verbruikt");
+        _week.SetValue(usage.WeekPercent, "verbruikt");
+        _todayRequests.Text = usage.TodayRequests.ToString("N0");
+        _todayTokens.Text = FormatTokens(usage.TodayTokens);
+        UpdateSessions(usage.RecentSessions);
+        ShowWarningIfNeeded(usage);
+    }
+
+    private void UpdateBalanceNote()
+    {
+        _autoRechargeBadge.Visible = true;
+        _balanceNote.Text = $"AUTO OPWAARDEREN · {_autoRechargeThreshold} → {_autoRechargeTarget} CREDITS";
+    }
+
+    private void UpdateSessions(IReadOnlyList<SessionUsage> sessions)
+    {
+        _sessions.SuspendLayout();
+        _sessions.Controls.Clear();
+        if (sessions.Count == 0)
+        {
+            var empty = NewLabel(10, FontStyle.Regular, Color.FromArgb(150, 169, 191));
+            empty.Text = "Nog geen sessieactiviteit van vandaag.";
+            empty.Margin = new Padding(5, 5, 0, 0);
+            empty.AutoSize = true;
+            _sessions.Controls.Add(empty);
+        }
+        foreach (var session in sessions.Take(4))
+        {
+            var row = new Panel { Width = 360, Height = 26, Margin = new Padding(4, 0, 0, 3), BackColor = Color.FromArgb(33, 48, 68) };
+            var left = NewLabel(9, FontStyle.Regular, Color.FromArgb(216, 227, 241));
+            left.Text = $"{session.Model.Replace("gpt-", "").Replace("-", " ")} · {session.LastUpdate.LocalDateTime:HH:mm}";
+            left.Location = new Point(9, 5);
+            left.Size = new Size(195, 17);
+            left.AutoEllipsis = true;
+            var right = NewLabel(9, FontStyle.Regular, Color.FromArgb(152, 195, 255));
+            right.Text = $"{session.Requests} · {FormatTokens(session.Tokens)}";
+            right.Location = new Point(209, 5);
+            right.Size = new Size(140, 17);
+            right.TextAlign = ContentAlignment.MiddleRight;
+            row.Controls.AddRange([left, right]);
+            _sessions.Controls.Add(row);
+        }
+        _sessions.ResumeLayout();
+    }
+
+    private void ShowWarningIfNeeded(UsageSummary usage)
+    {
+        if (usage.FiveHourPercent is not double percent) return;
+        var threshold = percent >= 90 ? 90 : percent >= 75 ? 75 : 0;
+        if (threshold == 0)
+        {
+            _lastWarnedPercent = null;
+            return;
+        }
+        if (_lastWarnedPercent == threshold) return;
+        _lastWarnedPercent = threshold;
+        // A threshold is announced once, and becomes eligible again after usage returns below 75%.
+        NotifyUser(percent);
+    }
+
+    private void NotifyUser(double percent)
+    {
+        WarningRaised?.Invoke(percent);
+    }
+
+    private Panel SmallCard(string eyebrow, string caption, Label value, Point location)
+    {
+        var card = Card(82);
+        card.Location = location;
+        card.Size = new Size(198, 82);
+        var label = NewLabel(9, FontStyle.Regular, Color.FromArgb(154, 173, 195));
+        label.Text = eyebrow;
+        label.Location = new Point(14, 11);
+        label.AutoSize = true;
+        value.Location = new Point(13, 27);
+        value.AutoSize = true;
+        var detail = NewLabel(9, FontStyle.Regular, Color.FromArgb(144, 162, 184));
+        detail.Text = caption;
+        detail.Location = new Point(14, 57);
+        detail.AutoSize = true;
+        card.Controls.AddRange([label, value, detail]);
+        return card;
+    }
+
+    private static Panel Card(int height) => new() { Width = 402, Height = height, Margin = Padding.Empty, BackColor = Color.FromArgb(27, 39, 57) };
+    private static Panel Spacer(int height) => new() { Height = height, Width = 402, Margin = Padding.Empty, BackColor = Color.Transparent };
+    private static Label NewLabel(float size, FontStyle style, Color color) => new() { Font = new Font("Segoe UI", size, style), ForeColor = color, BackColor = Color.Transparent };
+    private static string FormatTokens(long value) => value >= 1_000_000 ? $"{value / 1_000_000d:0.0}M" : value >= 1_000 ? $"{value / 1_000d:0.0}K" : value.ToString("N0");
+
+    private void DrawBackground(object? sender, PaintEventArgs e)
+    {
+        using var brush = new LinearGradientBrush(ClientRectangle, Color.FromArgb(17, 28, 45), Color.FromArgb(11, 16, 26), 90);
+        e.Graphics.FillRectangle(brush, ClientRectangle);
+    }
+
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            _sessionWatcher?.Dispose();
+            _fileChangeDebounce.Dispose();
+        }
+        base.Dispose(disposing);
+    }
+
+}
+
+internal enum HeaderIcon
+{
+    Settings,
+    Refresh
+}
+
+internal sealed class HeaderIconButton : Control
+{
+    private readonly HeaderIcon _icon;
+    private bool _hovered;
+
+    public HeaderIconButton(HeaderIcon icon)
+    {
+        _icon = icon;
+        Size = new Size(36, 32);
+        Cursor = Cursors.Hand;
+        SetStyle(ControlStyles.UserPaint | ControlStyles.AllPaintingInWmPaint | ControlStyles.OptimizedDoubleBuffer | ControlStyles.SupportsTransparentBackColor, true);
+        BackColor = Color.Transparent;
+        TabStop = true;
+    }
+
+    protected override void OnMouseEnter(EventArgs eventArgs)
+    {
+        _hovered = true;
+        Invalidate();
+        base.OnMouseEnter(eventArgs);
+    }
+
+    protected override void OnMouseLeave(EventArgs eventArgs)
+    {
+        _hovered = false;
+        Invalidate();
+        base.OnMouseLeave(eventArgs);
+    }
+
+    protected override void OnPaint(PaintEventArgs eventArgs)
+    {
+        eventArgs.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
+        if (_hovered)
+        {
+            using var hover = new SolidBrush(Color.FromArgb(38, 64, 95));
+            eventArgs.Graphics.FillEllipse(hover, 2, 0, 32, 32);
+        }
+
+        using var pen = new Pen(Color.FromArgb(197, 220, 252), 2.1f) { StartCap = LineCap.Round, EndCap = LineCap.Round, LineJoin = LineJoin.Round };
+        if (_icon == HeaderIcon.Refresh)
+        {
+            eventArgs.Graphics.DrawArc(pen, 8, 6, 20, 20, -58, 286);
+            using var fill = new SolidBrush(Color.FromArgb(197, 220, 252));
+            eventArgs.Graphics.FillPolygon(fill, [new Point(29, 8), new Point(23, 8), new Point(28, 14)]);
+            return;
+        }
+
+        var center = new PointF(18, 16);
+        for (var step = 0; step < 8; step++)
+        {
+            var angle = step * MathF.PI / 4;
+            var inner = new PointF(center.X + MathF.Cos(angle) * 7, center.Y + MathF.Sin(angle) * 7);
+            var outer = new PointF(center.X + MathF.Cos(angle) * 10, center.Y + MathF.Sin(angle) * 10);
+            eventArgs.Graphics.DrawLine(pen, inner, outer);
+        }
+        eventArgs.Graphics.DrawEllipse(pen, 10, 8, 16, 16);
+        eventArgs.Graphics.DrawEllipse(pen, 15, 13, 6, 6);
+    }
+}
+
+internal sealed class UsageBar : Control
+{
+    private readonly string _label;
+    private double? _value;
+    private string _suffix = "verbruikt";
+
+    public UsageBar(string label)
+    {
+        _label = label;
+        Height = 52;
+        DoubleBuffered = true;
+    }
+
+    public void SetValue(double? value, string suffix)
+    {
+        _value = value;
+        _suffix = suffix;
+        Invalidate();
+    }
+
+    protected override void OnPaint(PaintEventArgs e)
+    {
+        base.OnPaint(e);
+        e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
+        using var labelFont = new Font("Segoe UI", 10, FontStyle.Regular);
+        using var valueFont = new Font("Segoe UI", 10, FontStyle.Bold);
+        using var labelBrush = new SolidBrush(Color.FromArgb(214, 226, 241));
+        using var mutedBrush = new SolidBrush(Color.FromArgb(151, 170, 193));
+        e.Graphics.DrawString(_label, labelFont, labelBrush, 0, 0);
+        var text = _value is double value ? $"{value:0}% {_suffix}" : "nog niet beschikbaar";
+        var size = e.Graphics.MeasureString(text, valueFont);
+        e.Graphics.DrawString(text, valueFont, mutedBrush, Width - size.Width, 0);
+        var bar = new RectangleF(0, 28, Width, 10);
+        using var track = new SolidBrush(Color.FromArgb(50, 70, 94));
+        e.Graphics.FillRoundedRectangle(track, bar, 5);
+        if (_value is not double percent) return;
+        var color = percent >= 90 ? Color.FromArgb(244, 112, 112) : percent >= 75 ? Color.FromArgb(245, 182, 80) : Color.FromArgb(83, 184, 144);
+        using var fill = new SolidBrush(color);
+        var filled = new RectangleF(bar.X, bar.Y, Math.Max(0, bar.Width * (float)Math.Clamp(percent, 0, 100) / 100), bar.Height);
+        e.Graphics.FillRoundedRectangle(fill, filled, 5);
+    }
+}
+
+internal static class DrawingExtensions
+{
+    public static void FillRoundedRectangle(this Graphics graphics, Brush brush, RectangleF rectangle, float radius)
+    {
+        using var path = new GraphicsPath();
+        path.AddArc(rectangle.X, rectangle.Y, radius * 2, radius * 2, 180, 90);
+        path.AddArc(rectangle.Right - radius * 2, rectangle.Y, radius * 2, radius * 2, 270, 90);
+        path.AddArc(rectangle.Right - radius * 2, rectangle.Bottom - radius * 2, radius * 2, radius * 2, 0, 90);
+        path.AddArc(rectangle.X, rectangle.Bottom - radius * 2, radius * 2, radius * 2, 90, 90);
+        path.CloseFigure();
+        graphics.FillPath(brush, path);
+    }
+}
