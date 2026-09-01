@@ -101,6 +101,8 @@ internal sealed class DashboardForm : Form
         var metrics = new Panel { Width = 402, Height = 88, Margin = Padding.Empty, BackColor = Color.Transparent };
         var requestCard = SmallCard(Ui.T("VANDAAG", "TODAY"), Ui.T("Modelmomenten", "Model events"), _todayRequests, new Point(0, 0));
         var tokenCard = SmallCard(Ui.T("VANDAAG", "TODAY"), Ui.T("Verwerkte tokens", "Processed tokens"), _todayTokens, new Point(204, 0));
+        requestCard.Name = "requestCard";
+        tokenCard.Name = "tokenCard";
         metrics.Controls.AddRange([requestCard, tokenCard]);
 
         var sessionsCard = Card(170);
@@ -140,8 +142,8 @@ internal sealed class DashboardForm : Form
         }
         _isRefreshing = true;
         _notifyWhenCurrentRefreshCompletes = notifyWhenComplete;
-        _updated.Text = "Lokale sessies veilig op de achtergrond vernieuwen…";
-        ShowRefreshBanner("Vernieuwen…", Color.Transparent, Color.FromArgb(171, 202, 242), hideAfter: false);
+        _updated.Text = Ui.T("Lokale sessies veilig op de achtergrond vernieuwen…", "Refreshing local sessions safely in the background…");
+        ShowRefreshBanner(Ui.T("Vernieuwen…", "Refreshing…"), Color.Transparent, Color.FromArgb(171, 202, 242), hideAfter: false);
         try
         {
             var usage = await Task.Run(UsageReader.Read);
@@ -179,9 +181,19 @@ internal sealed class DashboardForm : Form
         if (balanceCaption is not null) balanceCaption.Text = Ui.S("Dashboard.AvailableBalance");
         var sessionsHeader = Controls.Find("sessionsHeader", true).OfType<Label>().FirstOrDefault();
         if (sessionsHeader is not null) sessionsHeader.Text = Ui.S("Dashboard.RecentSessions");
+        UpdateMetricCard("requestCard", Ui.T("VANDAAG", "TODAY"), Ui.T("Modelmomenten", "Model events"));
+        UpdateMetricCard("tokenCard", Ui.T("VANDAAG", "TODAY"), Ui.T("Verwerkte tokens", "Processed tokens"));
         _fiveHour.SetLabel(Ui.T("Huidige 5-uursvenster", "Current 5-hour window"));
         _week.SetLabel(Ui.T("Weekverbruik", "Weekly usage"));
         if (LatestUsage is { } usage) ApplyUsage(usage);
+    }
+
+    private void UpdateMetricCard(string name, string eyebrow, string caption)
+    {
+        var card = Controls.Find(name, true).OfType<Panel>().FirstOrDefault();
+        if (card is null) return;
+        if (card.Controls.Count > 0) card.Controls[0].Text = eyebrow;
+        if (card.Controls.Count > 2) card.Controls[2].Text = caption;
     }
 
     private void ShowRefreshBanner(string message, Color background, Color foreground, bool hideAfter)
