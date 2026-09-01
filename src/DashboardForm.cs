@@ -75,7 +75,8 @@ internal sealed class DashboardForm : Form
         header.Controls.AddRange([title, _updated, settings, refresh, _refreshBanner]);
 
         var balanceCard = Card(122);
-        var balanceCaption = NewLabel(11, FontStyle.Regular, Color.FromArgb(168, 185, 205)) { Name = "balanceCaption" };
+        var balanceCaption = NewLabel(11, FontStyle.Regular, Color.FromArgb(168, 185, 205));
+        balanceCaption.Name = "balanceCaption";
         balanceCaption.Text = Ui.S("Dashboard.AvailableBalance");
         balanceCaption.Location = new Point(17, 16);
         balanceCaption.AutoSize = true;
@@ -103,7 +104,8 @@ internal sealed class DashboardForm : Form
         metrics.Controls.AddRange([requestCard, tokenCard]);
 
         var sessionsCard = Card(170);
-        var sessionsHeader = NewLabel(11, FontStyle.Regular, Color.FromArgb(168, 185, 205)) { Name = "sessionsHeader" };
+        var sessionsHeader = NewLabel(11, FontStyle.Regular, Color.FromArgb(168, 185, 205));
+        sessionsHeader.Name = "sessionsHeader";
         sessionsHeader.Text = Ui.S("Dashboard.RecentSessions");
         sessionsHeader.Location = new Point(17, 14);
         sessionsHeader.AutoSize = true;
