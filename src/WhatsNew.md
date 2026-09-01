@@ -8,6 +8,7 @@
 - Transparante icoonknoppen, uitgelijnde Vandaag-kaarten en rustige statusregels zijn behouden.
 - PortableApps-pakket vernieuwd; instellingen blijven binnen de draagbare pakketmap.
 - Het infoscherm heeft nu een vaste, verzorgde makerskop met dynamische versieweergave.
+- Het 16px-icoon voor het PortableApps Platform heeft extra veilige marge en wordt niet meer afgesneden.
 
 ## Gebruik
 
