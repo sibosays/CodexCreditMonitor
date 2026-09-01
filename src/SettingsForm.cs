@@ -27,9 +27,8 @@ internal sealed class SettingsForm : Form
 
         Text = $"{Ui.T("Instellingen", "Settings")} · Codex Credit Monitor";
         Icon = Program.AppIcon;
-        ClientSize = new Size(462, 522);
-        MinimumSize = new Size(462, 522);
-        MaximumSize = new Size(462, 522);
+        ClientSize = new Size(462, 492);
+        FormBorderStyle = FormBorderStyle.FixedDialog;
         StartPosition = FormStartPosition.CenterScreen;
         BackColor = Color.FromArgb(15, 22, 35);
         Font = new Font("Segoe UI", 10);
@@ -81,14 +80,14 @@ internal sealed class SettingsForm : Form
             interval.Controls.Add(chip);
         }
 
-        var apply = new Button { Text = Ui.T("Toepassen", "Apply"), FlatStyle = FlatStyle.Flat, BackColor = Color.FromArgb(45, 87, 136), ForeColor = Color.White, Location = new Point(226, 486), Size = new Size(104, 30), Enabled = false };
+        var apply = new Button { Text = Ui.T("Toepassen", "Apply"), FlatStyle = FlatStyle.Flat, BackColor = Color.FromArgb(45, 87, 136), ForeColor = Color.White, Location = new Point(16, 42), Size = new Size(104, 24), Enabled = false };
         apply.FlatAppearance.BorderSize = 0;
         apply.Click += (_, _) => ApplyLanguage();
         var language = new SettingsCard { Location = new Point(23, 404), Size = new Size(416, 72) };
         var languageTitle = Label(Ui.T("Taal", "Language"), 11, FontStyle.Bold, Color.FromArgb(229, 238, 249));
         languageTitle.Location = new Point(16, 13);
-        var languageDescription = Label(Ui.T("Wordt direct toegepast.", "Applies immediately."), 9, FontStyle.Regular, Color.FromArgb(150, 172, 197));
-        languageDescription.Location = new Point(16, 38);
+        var languageDescription = Label(Ui.T("Start de app opnieuw in de gekozen taal.", "Restarts the app in the selected language."), 8.5f, FontStyle.Regular, Color.FromArgb(150, 172, 197));
+        languageDescription.Location = new Point(130, 46);
         _languageChoice = new ComboBox { DropDownStyle = ComboBoxStyle.DropDownList, Location = new Point(215, 21), Size = new Size(184, 25), Font = new Font("Segoe UI", 9) };
         _languageChoice.Items.AddRange(["Automatisch (Windows)", "Nederlands", "English"]);
         _languageChoice.SelectedIndex = _settings.Language switch { "nl" => 1, "en" => 2, _ => 0 };
@@ -97,12 +96,9 @@ internal sealed class SettingsForm : Form
             _languageChanged = SelectedLanguage() != _settings.Language;
             apply.Enabled = _languageChanged;
         };
-        language.Controls.AddRange([languageTitle, languageDescription, _languageChoice]);
+        language.Controls.AddRange([languageTitle, languageDescription, _languageChoice, apply]);
 
-        var done = new Button { Text = Ui.T("Gereed", "Done"), FlatStyle = FlatStyle.Flat, BackColor = Color.FromArgb(45, 87, 136), ForeColor = Color.White, Location = new Point(339, 486), Size = new Size(100, 30) };
-        done.FlatAppearance.BorderSize = 0;
-        done.Click += (_, _) => { if (_languageChanged) ApplyLanguage(); else Close(); };
-        Controls.AddRange([title, subtitle, startup, alerts, sound, interval, language, apply, done]);
+        Controls.AddRange([title, subtitle, startup, alerts, sound, interval, language]);
     }
 
     private SettingsCard Card(string titleText, string descriptionText, int y, ToggleSwitch toggle)
