@@ -15,7 +15,15 @@ internal static class Program
     {
         _settingsForRestart!.ReopenDashboardAfterLanguageChange = reopenDashboard;
         _settingsForRestart.Save();
-        Application.Restart();
+        var executable = Environment.ProcessPath;
+        if (string.IsNullOrWhiteSpace(executable)) return;
+        var restartThread = new Thread(() =>
+        {
+            Thread.Sleep(500);
+            Process.Start(new ProcessStartInfo(executable) { UseShellExecute = true });
+        }) { IsBackground = false };
+        restartThread.Start();
+        Application.Exit();
     }
     private static string StartupShortcutPath => Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.Startup),
