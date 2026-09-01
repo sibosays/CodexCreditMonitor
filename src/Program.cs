@@ -172,6 +172,9 @@ internal static class Program
             info.ShowDialog();
         }
 
+        void BuildTrayMenu()
+        {
+        menu.Items.Clear();
         menu.Items.Add(Ui.T("Dashboard openen", "Open dashboard"), null, (_, _) => ShowDashboard());
         menu.Items.Add(Ui.T("Nu vernieuwen", "Refresh now"), null, (_, _) =>
         {
@@ -194,6 +197,9 @@ internal static class Program
             dashboard.Close();
             applicationContext.ExitThread();
         });
+        }
+        BuildTrayMenu();
+        Ui.LanguageChanged += () => BuildTrayMenu();
 
         trayIcon.MouseClick += (_, eventArgs) =>
         {
