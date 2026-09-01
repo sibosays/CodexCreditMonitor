@@ -82,15 +82,19 @@ internal sealed class SettingsForm : Form
         var language = new SettingsCard { Location = new Point(23, 404), Size = new Size(416, 72) };
         var languageTitle = Label(Ui.T("Taal", "Language"), 11, FontStyle.Bold, Color.FromArgb(229, 238, 249));
         languageTitle.Location = new Point(16, 13);
-        var languageDescription = Label(Ui.T("Wordt actief bij de volgende start.", "Applies the next time the app starts."), 9, FontStyle.Regular, Color.FromArgb(150, 172, 197));
+        var languageDescription = Label(Ui.T("Wordt direct toegepast.", "Applies immediately."), 9, FontStyle.Regular, Color.FromArgb(150, 172, 197));
         languageDescription.Location = new Point(16, 38);
         var languageChoice = new ComboBox { DropDownStyle = ComboBoxStyle.DropDownList, Location = new Point(215, 21), Size = new Size(184, 25), Font = new Font("Segoe UI", 9) };
         languageChoice.Items.AddRange(["Automatisch (Windows)", "Nederlands", "English"]);
         languageChoice.SelectedIndex = _settings.Language switch { "nl" => 1, "en" => 2, _ => 0 };
         languageChoice.SelectedIndexChanged += (_, _) =>
         {
-            _settings.Language = languageChoice.SelectedIndex switch { 1 => "nl", 2 => "en", _ => "auto" };
+            var languageCode = languageChoice.SelectedIndex switch { 1 => "nl", 2 => "en", _ => "auto" };
+            if (_settings.Language == languageCode) return;
+            _settings.Language = languageCode;
             _settings.Save();
+            Ui.SetLanguage(languageCode);
+            BeginInvoke(Program.RestartForLanguageChange);
         };
         language.Controls.AddRange([languageTitle, languageDescription, languageChoice]);
 

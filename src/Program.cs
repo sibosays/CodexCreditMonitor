@@ -8,6 +8,11 @@ internal static class Program
 {
     private const string AppTitle = "Codex Credit Monitor";
     internal static readonly Icon AppIcon = CreateAppIcon();
+
+    internal static void RestartForLanguageChange()
+    {
+        Application.Restart();
+    }
     private static string StartupShortcutPath => Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.Startup),
         "Codex Credit Monitor.lnk");
