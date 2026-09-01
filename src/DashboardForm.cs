@@ -175,8 +175,10 @@ internal sealed class DashboardForm : Form
     {
         if (IsDisposed) return;
         if (InvokeRequired) { BeginInvoke((Action)OnLanguageChanged); return; }
-        Controls.Find("balanceCaption", true).OfType<Label>().FirstOrDefault()?.Text = Ui.S("Dashboard.AvailableBalance");
-        Controls.Find("sessionsHeader", true).OfType<Label>().FirstOrDefault()?.Text = Ui.S("Dashboard.RecentSessions");
+        var balanceCaption = Controls.Find("balanceCaption", true).OfType<Label>().FirstOrDefault();
+        if (balanceCaption is not null) balanceCaption.Text = Ui.S("Dashboard.AvailableBalance");
+        var sessionsHeader = Controls.Find("sessionsHeader", true).OfType<Label>().FirstOrDefault();
+        if (sessionsHeader is not null) sessionsHeader.Text = Ui.S("Dashboard.RecentSessions");
         _fiveHour.SetLabel(Ui.T("Huidige 5-uursvenster", "Current 5-hour window"));
         _week.SetLabel(Ui.T("Weekverbruik", "Weekly usage"));
         if (LatestUsage is { } usage) ApplyUsage(usage);
