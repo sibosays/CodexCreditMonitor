@@ -24,7 +24,7 @@ internal static class UsageReader
         {
             var sessionsRoot = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".codex", "sessions");
             if (!Directory.Exists(sessionsRoot))
-                return new UsageSummary(false, null, null, null, null, 0, 0, [], "Geen lokale Codex-sessies gevonden.");
+                return new UsageSummary(false, null, null, null, null, 0, 0, [], Ui.T("Geen lokale Codex-sessies gevonden.", "No local Codex sessions found."));
 
             var newest = new LatestState();
             var sessions = new List<SessionUsage>();

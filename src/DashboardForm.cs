@@ -263,8 +263,8 @@ internal sealed class DashboardForm : Form
         _updated.Text = usage.LastUpdate is DateTimeOffset updated
             ? string.Format(Ui.S("Dashboard.UpdatedAt"), updated.LocalDateTime.ToString("HH:mm"))
             : usage.Error ?? Ui.S("Dashboard.NoData");
-        _fiveHour.SetValue(usage.FiveHourPercent, Ui.S("Dashboard.Used"));
-        _week.SetValue(usage.WeekPercent, Ui.S("Dashboard.Used"));
+        _fiveHour.SetValue(usage.FiveHourPercent);
+        _week.SetValue(usage.WeekPercent);
         _todayRequests.Text = usage.TodayRequests.ToString("N0");
         _todayTokens.Text = FormatTokens(usage.TodayTokens);
         UpdateSessions(usage.RecentSessions);
@@ -441,7 +441,6 @@ internal sealed class UsageBar : Control
 {
     private string _label;
     private double? _value;
-    private string _suffix = "";
 
     public UsageBar(string label)
     {
@@ -450,10 +449,9 @@ internal sealed class UsageBar : Control
         DoubleBuffered = true;
     }
 
-    public void SetValue(double? value, string suffix)
+    public void SetValue(double? value)
     {
         _value = value;
-        _suffix = suffix;
         Invalidate();
     }
 
@@ -472,7 +470,7 @@ internal sealed class UsageBar : Control
         using var labelBrush = new SolidBrush(Color.FromArgb(214, 226, 241));
         using var mutedBrush = new SolidBrush(Color.FromArgb(151, 170, 193));
         e.Graphics.DrawString(_label, labelFont, labelBrush, 0, 0);
-        var text = _value is double value ? $"{value:0}% {_suffix}" : Ui.S("Dashboard.NotAvailable");
+        var text = _value is double value ? $"{value:0}% {Ui.S("Dashboard.Used")}" : Ui.S("Dashboard.NotAvailable");
         var size = e.Graphics.MeasureString(text, valueFont);
         e.Graphics.DrawString(text, valueFont, mutedBrush, Width - size.Width, 0);
         var bar = new RectangleF(0, 28, Width, 10);
