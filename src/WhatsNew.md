@@ -1,15 +1,15 @@
 # Codex Credit Monitor 1.0
 
-## Nieuw in deze versie
+## Functionele beschrijving
 
-- De miniweergave bij **Nu vernieuwen** is volledig opnieuw ingedeeld: saldo, 5-uursvenster en weekverbruik staan vast uitgelijnd en kunnen niet meer over elkaar vallen.
-- Geen tussentijds laadvenster meer: bij een gesloten dashboard verschijnt uitsluitend het uiteindelijke compacte overzicht bij het systeemvak.
-- Vernieuwen tijdens een lopende meting blijft gekoppeld aan dat ene resultaat; er ontstaan geen stapels meldingen.
-- Transparante icoonknoppen, uitgelijnde Vandaag-kaarten en rustige statusregels zijn behouden.
-- PortableApps-pakket vernieuwd; instellingen blijven binnen de draagbare pakketmap.
-- Het infoscherm heeft nu een vaste, verzorgde makerskop met dynamische versieweergave.
-- Het 16px-icoon voor het PortableApps Platform heeft extra veilige marge en wordt niet meer afgesneden.
+Codex Credit Monitor is een lichte Windows-systeemvakapp die je lokale Codex-sessies samenvat. De app werkt op de achtergrond, leest geen externe gegevens en stuurt niets door.
 
-## Gebruik
+- Toont je beschikbare credittegoed, het 5-uursvenster en weekverbruik.
+- Geeft inzicht in modelmomenten, verwerkte tokens en recente sessies van vandaag.
+- Vernieuwt op aanvraag of periodiek met een rustig, instelbaar interval.
+- Geeft optioneel een zichtbare en hoorbare waarschuwing bij hoog verbruik.
+- Toont een compacte samenvatting bij het systeemvak als je vernieuwt terwijl het dashboard gesloten is.
+- Ondersteunt automatische opwaardering als context: de app toont je ingestelde drempel en doel, maar wijzigt ChatGPT nooit zelf.
+- Werkt als gewone Windows-app of als zelfstandige PortableApps-editie; de draagbare editie bewaart instellingen in zijn eigen `Data`-map.
 
-De monitor leest uitsluitend lokale Codex-sessielogs. Het dashboard opent vanuit het systeemvak. De info in dit venster komt rechtstreeks uit dit bestand, zodat app en documentatie gelijk blijven.
+Het dashboard open je vanuit het systeemvak. Instellingen, handmatig vernieuwen en afsluiten zijn daar eveneens beschikbaar.
