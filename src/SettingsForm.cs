@@ -14,6 +14,8 @@ internal sealed class SettingsForm : Form
     private readonly ToggleSwitch _alertsToggle;
     private readonly ToggleSwitch _soundToggle;
     private readonly List<ChoiceChip> _intervalChoices = [];
+    private ComboBox? _languageChoice;
+    private bool _languageChanged;
 
     public SettingsForm(MonitorSettings settings, Func<bool> startupEnabled, Func<bool, bool> setStartupEnabled, Action<int> setRefreshInterval, bool allowStartup)
     {
@@ -79,29 +81,28 @@ internal sealed class SettingsForm : Form
             interval.Controls.Add(chip);
         }
 
+        var apply = new Button { Text = Ui.T("Toepassen", "Apply"), FlatStyle = FlatStyle.Flat, BackColor = Color.FromArgb(45, 87, 136), ForeColor = Color.White, Location = new Point(226, 486), Size = new Size(104, 30), Enabled = false };
+        apply.FlatAppearance.BorderSize = 0;
+        apply.Click += (_, _) => ApplyLanguage();
         var language = new SettingsCard { Location = new Point(23, 404), Size = new Size(416, 72) };
         var languageTitle = Label(Ui.T("Taal", "Language"), 11, FontStyle.Bold, Color.FromArgb(229, 238, 249));
         languageTitle.Location = new Point(16, 13);
         var languageDescription = Label(Ui.T("Wordt direct toegepast.", "Applies immediately."), 9, FontStyle.Regular, Color.FromArgb(150, 172, 197));
         languageDescription.Location = new Point(16, 38);
-        var languageChoice = new ComboBox { DropDownStyle = ComboBoxStyle.DropDownList, Location = new Point(215, 21), Size = new Size(184, 25), Font = new Font("Segoe UI", 9) };
-        languageChoice.Items.AddRange(["Automatisch (Windows)", "Nederlands", "English"]);
-        languageChoice.SelectedIndex = _settings.Language switch { "nl" => 1, "en" => 2, _ => 0 };
-        languageChoice.SelectedIndexChanged += (_, _) =>
+        _languageChoice = new ComboBox { DropDownStyle = ComboBoxStyle.DropDownList, Location = new Point(215, 21), Size = new Size(184, 25), Font = new Font("Segoe UI", 9) };
+        _languageChoice.Items.AddRange(["Automatisch (Windows)", "Nederlands", "English"]);
+        _languageChoice.SelectedIndex = _settings.Language switch { "nl" => 1, "en" => 2, _ => 0 };
+        _languageChoice.SelectedIndexChanged += (_, _) =>
         {
-            var languageCode = languageChoice.SelectedIndex switch { 1 => "nl", 2 => "en", _ => "auto" };
-            if (_settings.Language == languageCode) return;
-            _settings.Language = languageCode;
-            _settings.Save();
-            Ui.SetLanguage(languageCode);
-            BeginInvoke(Program.RestartForLanguageChange);
+            _languageChanged = SelectedLanguage() != _settings.Language;
+            apply.Enabled = _languageChanged;
         };
-        language.Controls.AddRange([languageTitle, languageDescription, languageChoice]);
+        language.Controls.AddRange([languageTitle, languageDescription, _languageChoice]);
 
         var done = new Button { Text = Ui.T("Gereed", "Done"), FlatStyle = FlatStyle.Flat, BackColor = Color.FromArgb(45, 87, 136), ForeColor = Color.White, Location = new Point(339, 486), Size = new Size(100, 30) };
         done.FlatAppearance.BorderSize = 0;
-        done.Click += (_, _) => Close();
-        Controls.AddRange([title, subtitle, startup, alerts, sound, interval, language, done]);
+        done.Click += (_, _) => { if (_languageChanged) ApplyLanguage(); else Close(); };
+        Controls.AddRange([title, subtitle, startup, alerts, sound, interval, language, apply, done]);
     }
 
     private SettingsCard Card(string titleText, string descriptionText, int y, ToggleSwitch toggle)
@@ -120,6 +121,18 @@ internal sealed class SettingsForm : Form
     {
         _setRefreshInterval(minutes);
         foreach (var chip in _intervalChoices) chip.Selected = chip.Text == $"{minutes} min.";
+    }
+
+    private string SelectedLanguage() => _languageChoice?.SelectedIndex switch { 1 => "nl", 2 => "en", _ => "auto" };
+
+    private void ApplyLanguage()
+    {
+        if (!_languageChanged) return;
+        var language = SelectedLanguage();
+        _settings.Language = language;
+        _settings.Save();
+        Ui.SetLanguage(language);
+        Program.RestartForLanguageChange();
     }
 
     private static Label Label(string text, float size, FontStyle style, Color color) => new()
