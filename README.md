@@ -10,13 +10,14 @@ Codex Credit Monitor keeps a lightweight view of the Codex activity available on
 
 | Current version | Package | Platform |
 | --- | --- | --- |
-| 1.0 | [CodexCreditMonitorPortable_1.0.paf.exe](downloads/CodexCreditMonitorPortable_1.0.paf.exe) | 64-bit Windows / PortableApps |
+| 2.0 | [CodexCreditMonitorPortable_2.0.paf.exe](downloads/CodexCreditMonitorPortable_2.0.paf.exe) | 64-bit Windows / PortableApps |
 
 The installer checksum is available in [SHA256SUMS.txt](SHA256SUMS.txt).
 
 ## What it shows
 
 - Available credit balance, current five-hour window, and weekly usage.
+- Improved reading of credit balance and usage windows when Codex writes additional rate-limit records.
 - Model activity, processed tokens, and recent sessions from today.
 - On-demand or scheduled refreshes with a configurable interval.
 - Optional visual and audio warnings at high five-hour usage.
