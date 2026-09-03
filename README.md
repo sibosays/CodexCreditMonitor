@@ -8,11 +8,7 @@ Codex Credit Monitor keeps a lightweight view of the Codex activity available on
 
 ## Download
 
-| Current version | Package | Platform |
-| --- | --- | --- |
-| 2.0 | [CodexCreditMonitorPortable_2.0.paf.exe](downloads/CodexCreditMonitorPortable_2.0.paf.exe) | 64-bit Windows / PortableApps |
-
-The installer checksum is available in [SHA256SUMS.txt](SHA256SUMS.txt).
+The PortableApps installer is temporarily unavailable while its installation flow is repaired and independently verified. No download is currently published from this repository.
 
 ## What it shows
 
