@@ -10,7 +10,7 @@ Codex Credit Monitor keeps a lightweight view of the Codex activity available on
 
 | Current version | Package | Platform |
 | --- | --- | --- |
-| 2.0 | [CodexCreditMonitorPortable_2.0.paf.exe](downloads/CodexCreditMonitorPortable_2.0.paf.exe) | 64-bit Windows / PortableApps |
+| 3.0 | [CodexCreditMonitorPortable_3.0.paf.exe](downloads/CodexCreditMonitorPortable_3.0.paf.exe) | 64-bit Windows / PortableApps |
 
 The installer checksum is available in [SHA256SUMS.txt](SHA256SUMS.txt).
 
@@ -22,6 +22,7 @@ The installer checksum is available in [SHA256SUMS.txt](SHA256SUMS.txt).
 - On-demand or scheduled refreshes with a configurable interval.
 - Optional visual and audio warnings at high five-hour usage.
 - Your configured automatic-recharge threshold and target as context only; the app never changes that setting for you.
+- A label that consistently follows the selected app language.
 
 ## Install and start
 
