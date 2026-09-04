@@ -2,45 +2,41 @@
 
 **A portable Windows system-tray companion for understanding local Codex usage at a glance.**
 
-Codex Credit Monitor keeps a lightweight view of the Codex activity available on the current Windows device. It runs quietly in the system tray and turns local session records into a clear dashboard, optional usage alerts, and a compact refresh summary.
+Codex Credit Monitor turns local Codex session records into a clear dashboard for credit balance, rate-limit windows, model activity, and recent sessions. It runs quietly in the Windows system tray and never changes your ChatGPT or Codex account.
 
-> This is an independent community utility. It is not an official OpenAI product and it does not change your ChatGPT or Codex account.
+> This is an independent community utility. It is not an official OpenAI product and is not an official billing meter.
 
 ## Download
 
-The PortableApps installer is temporarily unavailable while its installation flow is repaired and independently verified. No download is currently published from this repository.
+Download the current portable package from the [latest release](https://github.com/sibosays/CodexCreditMonitor/releases/latest):
+
+**[Download Codex Credit Monitor Portable v2.0 (ZIP)](https://github.com/sibosays/CodexCreditMonitor/releases/download/v2.0/CodexCreditMonitorPortable_2.0.zip)**
+
+The repository deliberately contains product information only. The application source code is not published here.
+
+## Install and start
+
+1. Download `CodexCreditMonitorPortable_2.0.zip` from the release above.
+2. Right-click the ZIP file and choose **Extract All**.
+3. Open the extracted `CodexCreditMonitorPortable` folder.
+4. Run `CodexCreditMonitorPortable.exe`.
+5. Keep the folder intact. The app stores its portable data in its own `Data` folder.
+
+For an integrity check, compare the SHA-256 value in `SHA256SUMS.txt` with the downloaded ZIP file. Because this is an independent Windows app, SmartScreen may initially identify it as an unfamiliar publisher; only proceed after confirming that you downloaded it from this GitHub release and, if needed, verifying the checksum.
 
 ## What it shows
 
 - Available credit balance, current five-hour window, and weekly usage.
-- Improved reading of credit balance and usage windows when Codex writes additional rate-limit records.
 - Model activity, processed tokens, and recent sessions from today.
 - On-demand or scheduled refreshes with a configurable interval.
 - Optional visual and audio warnings at high five-hour usage.
 - Your configured automatic-recharge threshold and target as context only; the app never changes that setting for you.
-- A label that consistently follows the selected app language.
-
-## Install and start
-
-1. Download the `.paf.exe` package above.
-2. Open it with the [PortableApps Platform](https://portableapps.com/).
-3. Choose an install location and launch **Codex Credit Monitor** from the platform.
-4. Find the app in the Windows system tray; use its menu to open the dashboard, refresh, configure settings, or exit.
-
-The portable edition keeps its settings inside its own `Data` folder. It deliberately does not offer Windows startup, so it does not make a persistent change to the host computer.
+- English and Dutch application interfaces, selectable in **Settings**.
 
 ## Privacy and scope
 
-Codex Credit Monitor reads the signed-in Windows user's local Codex session records. It does not send that data elsewhere. It is a convenience view rather than an official billing meter: cloud tasks, activity from other devices, and delayed balance updates may not appear immediately.
-
-## Languages
-
-The application supports English and Dutch. Select the preferred language in **Settings**.
-
-## Source availability
-
-This repository is intentionally **installer-only** for now. It contains the public PortableApps package and product information, not the application's source code.
+Codex Credit Monitor reads the signed-in Windows user's local Codex session records. It does not send that data elsewhere. Cloud tasks, activity from other devices, and delayed balance updates may not appear immediately.
 
 ## Feedback
 
-If you encounter an issue or have an idea, please open a GitHub issue with your Windows version, the app version, and steps to reproduce the behaviour.
+For a problem or improvement idea, please open a GitHub issue with your Windows version, app version, and steps to reproduce the behaviour.
