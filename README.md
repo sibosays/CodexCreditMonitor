@@ -6,6 +6,12 @@ Codex Credit Monitor turns local Codex session records into a clear dashboard fo
 
 > This is an independent community utility. It is not an official OpenAI product and is not an official billing meter.
 
+## At a glance
+
+![Codex Credit Monitor dashboard showing the available credit balance, five-hour and weekly usage, activity totals, and recent sessions.](assets/dashboard-overview.png)
+
+*The dashboard presents local Codex usage in one compact Windows system-tray companion.*
+
 ## Download
 
 Download the current portable package directly from this repository:
