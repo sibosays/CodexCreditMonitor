@@ -8,7 +8,7 @@ Codex Credit Monitor turns local Codex session records into a clear dashboard fo
 
 ## At a glance
 
-![Codex Credit Monitor dashboard showing the available credit balance, five-hour and weekly usage, activity totals, and recent sessions.](https://raw.githubusercontent.com/sibosays/CodexCreditMonitor/d928eea/assets/dashboard-overview.png)
+![Codex Credit Monitor dashboard showing the available credit balance, five-hour and weekly usage, activity totals, and recent sessions.](https://raw.githubusercontent.com/sibosays/CodexCreditMonitor/57d14f52c0f454fe03fe0026510bb139ed70935c/assets/dashboard-overview.png)
 
 *The dashboard presents local Codex usage in one compact Windows system-tray companion.*
 
