@@ -29,7 +29,7 @@ For an integrity check, compare the SHA-256 value in [SHA256SUMS.txt](downloads/
 - Available credit balance, current five-hour window, and weekly usage.
 - Model activity, processed tokens, and recent sessions from today.
 - On-demand or scheduled refreshes with a configurable interval.
-- Optional visual and audio warnings at high five-hour usage.
+- Optional visible and audible warnings at 75% and 90% of the five-hour window, and when the remaining balance reaches 25 or 10 credits.
 - Your configured automatic-recharge threshold and target as context only; the app never changes that setting for you.
 - English and Dutch application interfaces, selectable in **Settings**.
 
