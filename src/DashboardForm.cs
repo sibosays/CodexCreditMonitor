@@ -8,6 +8,8 @@ internal sealed class DashboardForm : Form
     private readonly Label _balance = NewLabel(27, FontStyle.Bold, Color.White);
     private readonly Panel _autoRechargeBadge = new() { BackColor = Color.Transparent, Visible = false };
     private readonly Label _balanceNote = NewLabel(9, FontStyle.Bold, Color.FromArgb(191, 231, 245));
+    private readonly Panel _creditPaceBadge = new() { BackColor = Color.Transparent, Visible = false };
+    private readonly Label _creditPaceNote = NewLabel(9, FontStyle.Bold, Color.FromArgb(235, 204, 136));
     private readonly Label _updated = NewLabel(10, FontStyle.Regular, Color.FromArgb(155, 172, 194));
     private readonly UsageBar _fiveHour = new(Ui.S("Dashboard.CurrentWindow"));
     private readonly UsageBar _week = new(Ui.S("Dashboard.WeeklyUsage"));
@@ -22,6 +24,8 @@ internal sealed class DashboardForm : Form
     private readonly Panel _refreshBanner = new() { Height = 24, BackColor = Color.Transparent, Visible = false };
     private readonly Label _refreshBannerText = NewLabel(9, FontStyle.Bold, Color.FromArgb(220, 238, 255));
     private double? _lastWarnedPercent;
+    private decimal? _lastWarnedCreditThreshold;
+    private CreditSpendAlertLevel _lastCreditSpendAlertLevel;
     private bool _isRefreshing;
     private bool _notifyWhenCurrentRefreshCompletes;
     private int _autoRechargeThreshold;
@@ -29,9 +33,13 @@ internal sealed class DashboardForm : Form
     private FileSystemWatcher? _sessionWatcher;
 
     public event Action<double>? WarningRaised;
+    public event Action<decimal>? LowCreditWarningRaised;
+    public event Action<CreditSpendRate>? RapidCreditSpendWarningRaised;
     public event Action<UsageSummary?, string?>? RefreshCompleted;
     public event Action? SettingsRequested;
     public event Action? InfoRequested;
+    public event Action? AddCreditsRequested;
+    public event Action? UseCreditsRequested;
     [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
     internal UsageSummary? LatestUsage { get; private set; }
 
@@ -39,8 +47,8 @@ internal sealed class DashboardForm : Form
     {
         Text = "Codex Credit Monitor";
         Icon = Program.AppIcon;
-        ClientSize = new Size(450, 700);
-        MinimumSize = new Size(420, 700);
+        ClientSize = new Size(450, 730);
+        MinimumSize = new Size(420, 730);
         MaximizeBox = false;
         StartPosition = FormStartPosition.CenterScreen;
         BackColor = Color.FromArgb(15, 22, 35);
@@ -53,7 +61,9 @@ internal sealed class DashboardForm : Form
         // FlowLayoutPanel does not honor Dock sizing for child controls; make the header
         // explicitly as wide as the cards so the controls on its right stay visible.
         var header = new Panel { Width = 402, Height = 94, Margin = Padding.Empty, BackColor = Color.Transparent };
-        var title = NewLabel(18, FontStyle.Bold, Color.White);
+        // Five compact header actions leave 190 logical pixels for the product name.
+        // Keep the full title visible instead of letting it run beneath an action.
+        var title = NewLabel(13, FontStyle.Bold, Color.White);
         title.Text = "Codex Credit Monitor";
         title.Location = new Point(0, 0);
         title.AutoSize = true;
@@ -66,7 +76,13 @@ internal sealed class DashboardForm : Form
         settings.Click += (_, _) => SettingsRequested?.Invoke();
         var info = new HeaderIconButton(HeaderIcon.Info) { Location = new Point(278, 0), Anchor = AnchorStyles.Top | AnchorStyles.Right, AccessibleName = Ui.T("Info", "About") };
         info.Click += (_, _) => InfoRequested?.Invoke();
+        var useCredits = new HeaderIconButton(HeaderIcon.UseCredits) { Location = new Point(234, 0), Anchor = AnchorStyles.Top | AnchorStyles.Right, AccessibleName = Ui.T("Credits gebruiken", "Use credits") };
+        useCredits.Click += (_, _) => UseCreditsRequested?.Invoke();
+        var addCredits = new HeaderIconButton(HeaderIcon.AddCredits) { Location = new Point(190, 0), Anchor = AnchorStyles.Top | AnchorStyles.Right, AccessibleName = Ui.T("Credits toevoegen", "Add credits") };
+        addCredits.Click += (_, _) => AddCreditsRequested?.Invoke();
         var settingsTooltip = new ToolTip();
+        settingsTooltip.SetToolTip(addCredits, Ui.T("Credits toevoegen — open Usage & Billing in ChatGPT", "Add credits — open Usage & Billing in ChatGPT"));
+        settingsTooltip.SetToolTip(useCredits, Ui.T("Credits gebruiken — beheer extra Codex-gebruik in ChatGPT", "Use credits — manage extra Codex usage in ChatGPT"));
         settingsTooltip.SetToolTip(info, Ui.T("Info", "About"));
         settingsTooltip.SetToolTip(settings, Ui.T("Instellingen", "Settings"));
         settingsTooltip.SetToolTip(refresh, Ui.T("Nu vernieuwen", "Refresh now"));
@@ -76,9 +92,9 @@ internal sealed class DashboardForm : Form
         _refreshBannerText.Dock = DockStyle.Fill;
         _refreshBannerText.TextAlign = ContentAlignment.MiddleLeft;
         _refreshBanner.Controls.Add(_refreshBannerText);
-        header.Controls.AddRange([title, _updated, info, settings, refresh, _refreshBanner]);
+        header.Controls.AddRange([title, _updated, addCredits, useCredits, info, settings, refresh, _refreshBanner]);
 
-        var balanceCard = Card(122);
+        var balanceCard = Card(154);
         var balanceCaption = NewLabel(11, FontStyle.Regular, Color.FromArgb(168, 185, 205));
         balanceCaption.Name = "balanceCaption";
         balanceCaption.Text = Ui.S("Dashboard.AvailableBalance");
@@ -88,12 +104,18 @@ internal sealed class DashboardForm : Form
         _balance.Text = "—";
         _balance.AutoSize = true;
         _autoRechargeBadge.Location = new Point(16, 85);
-        _autoRechargeBadge.Size = new Size(267, 23);
+        _autoRechargeBadge.Size = new Size(370, 23);
         _autoRechargeBadge.Padding = new Padding(9, 3, 8, 2);
         _balanceNote.Dock = DockStyle.Fill;
         _balanceNote.TextAlign = ContentAlignment.MiddleLeft;
         _autoRechargeBadge.Controls.Add(_balanceNote);
-        balanceCard.Controls.AddRange([balanceCaption, _balance, _autoRechargeBadge]);
+        _creditPaceBadge.Location = new Point(16, 113);
+        _creditPaceBadge.Size = new Size(370, 23);
+        _creditPaceBadge.Padding = new Padding(9, 3, 8, 2);
+        _creditPaceNote.Dock = DockStyle.Fill;
+        _creditPaceNote.TextAlign = ContentAlignment.MiddleLeft;
+        _creditPaceBadge.Controls.Add(_creditPaceNote);
+        balanceCard.Controls.AddRange([balanceCaption, _balance, _autoRechargeBadge, _creditPaceBadge]);
 
         var bars = Card(142);
         _fiveHour.Location = new Point(17, 14);
@@ -189,6 +211,9 @@ internal sealed class DashboardForm : Form
         UpdateMetricCard("tokenCard", Ui.S("Dashboard.Today"), Ui.S("Dashboard.ProcessedTokens"));
         _fiveHour.SetLabel(Ui.S("Dashboard.CurrentWindow"));
         _week.SetLabel(Ui.S("Dashboard.WeeklyUsage"));
+        // This label is not derived from a usage read, so translate it explicitly
+        // instead of waiting for the next dashboard refresh.
+        UpdateBalanceNote();
         if (_isRefreshing)
         {
             _updated.Text = Ui.S("Dashboard.RefreshingLocal");
@@ -273,12 +298,36 @@ internal sealed class DashboardForm : Form
         _todayTokens.Text = FormatTokens(usage.TodayTokens);
         UpdateSessions(usage.RecentSessions);
         ShowWarningIfNeeded(usage);
+        ShowLowCreditWarningIfNeeded(usage);
+        var creditSpendRate = CreditSpendRateDetector.Analyze(usage.CreditBalanceHistory);
+        UpdateCreditPace(usage, creditSpendRate);
+        ShowRapidCreditSpendWarningIfNeeded(creditSpendRate);
     }
 
     private void UpdateBalanceNote()
     {
         _autoRechargeBadge.Visible = true;
         _balanceNote.Text = $"{Ui.S("Dashboard.AutoRecharge")} · {_autoRechargeThreshold} → {_autoRechargeTarget} CREDITS";
+    }
+
+    private void UpdateCreditPace(UsageSummary usage, CreditSpendRate? rate)
+    {
+        _creditPaceBadge.Visible = true;
+        if (usage.WeekPercent is >= 100)
+        {
+            _creditPaceBadge.BackColor = Color.FromArgb(74, 47, 60);
+            _creditPaceNote.ForeColor = Color.FromArgb(255, 181, 184);
+            _creditPaceNote.Text = Ui.T("BUNDEL OPGEBRUIKT · credits worden nu gebruikt", "INCLUDED ALLOWANCE EXHAUSTED · credits are now in use");
+            return;
+        }
+
+        _creditPaceBadge.BackColor = Color.Transparent;
+        _creditPaceNote.ForeColor = rate?.AlertLevel == CreditSpendAlertLevel.Critical
+            ? Color.FromArgb(255, 181, 184)
+            : Color.FromArgb(235, 204, 136);
+        _creditPaceNote.Text = rate is null
+            ? Ui.T("VERBRUIKSTEMPO · lokale metingen worden verzameld", "USAGE PACE · collecting local measurements")
+            : Ui.T($"VERBRUIKSTEMPO · {rate.CreditsPerHour:N1} credits/uur", $"USAGE PACE · {rate.CreditsPerHour:N1} credits/hour");
     }
 
     private void UpdateSessions(IReadOnlyList<SessionUsage> sessions)
@@ -332,6 +381,36 @@ internal sealed class DashboardForm : Form
         WarningRaised?.Invoke(percent);
     }
 
+    private void ShowLowCreditWarningIfNeeded(UsageSummary usage)
+    {
+        if (usage.CreditBalance is not decimal credits) return;
+
+        var threshold = credits <= 10m ? 10m : credits <= 25m ? 25m : 0m;
+        if (threshold == 0m)
+        {
+            _lastWarnedCreditThreshold = null;
+            return;
+        }
+
+        if (_lastWarnedCreditThreshold == threshold) return;
+        _lastWarnedCreditThreshold = threshold;
+        // Mirrors the usage-window warning behaviour: one alert per threshold, re-armed above 25 credits.
+        LowCreditWarningRaised?.Invoke(credits);
+    }
+
+    private void ShowRapidCreditSpendWarningIfNeeded(CreditSpendRate? rate)
+    {
+        if (rate is null || rate.AlertLevel == CreditSpendAlertLevel.None)
+        {
+            _lastCreditSpendAlertLevel = CreditSpendAlertLevel.None;
+            return;
+        }
+
+        if (rate.AlertLevel <= _lastCreditSpendAlertLevel) return;
+        _lastCreditSpendAlertLevel = rate.AlertLevel;
+        RapidCreditSpendWarningRaised?.Invoke(rate);
+    }
+
     private Panel SmallCard(string eyebrow, string caption, Label value, Point location)
     {
         var card = Card(82);
@@ -377,6 +456,8 @@ internal sealed class DashboardForm : Form
 
 internal enum HeaderIcon
 {
+    AddCredits,
+    UseCredits,
     Info,
     Settings,
     Refresh
@@ -426,6 +507,23 @@ internal sealed class HeaderIconButton : Control
             eventArgs.Graphics.DrawArc(pen, 8, 6, 20, 20, -58, 286);
             using var fill = new SolidBrush(Color.FromArgb(197, 220, 252));
             eventArgs.Graphics.FillPolygon(fill, [new Point(29, 8), new Point(23, 8), new Point(28, 14)]);
+            return;
+        }
+
+        if (_icon == HeaderIcon.AddCredits)
+        {
+            eventArgs.Graphics.DrawEllipse(pen, 8, 6, 20, 20);
+            eventArgs.Graphics.DrawLine(pen, 18, 11, 18, 21);
+            eventArgs.Graphics.DrawLine(pen, 13, 16, 23, 16);
+            return;
+        }
+
+        if (_icon == HeaderIcon.UseCredits)
+        {
+            eventArgs.Graphics.DrawEllipse(pen, 8, 6, 20, 20);
+            eventArgs.Graphics.DrawLine(pen, 12, 16, 23, 16);
+            using var fill = new SolidBrush(Color.FromArgb(197, 220, 252));
+            eventArgs.Graphics.FillPolygon(fill, [new Point(24, 16), new Point(19, 11), new Point(19, 21)]);
             return;
         }
 

@@ -8,7 +8,7 @@
   <data name="Dashboard.LocalTracking" xml:space="preserve"><value>Lokale gebruiksregistratie</value></data>
   <data name="Dashboard.RecentSessions" xml:space="preserve"><value>RECENTE SESSIES VANDAAG</value></data>
   <data name="Dashboard.Today" xml:space="preserve"><value>VANDAAG</value></data>
-  <data name="Dashboard.AutoRecharge" xml:space="preserve"><value>AUTO OPWAARDEREN</value></data>
+  <data name="Dashboard.AutoRecharge" xml:space="preserve"><value>AUTOMATISCH OPWAARDEREN</value></data>
   <data name="Dashboard.NoData" xml:space="preserve"><value>Geen gegevens</value></data>
   <data name="Dashboard.NoSessions" xml:space="preserve"><value>Nog geen sessieactiviteit van vandaag.</value></data>
   <data name="Dashboard.CurrentWindow" xml:space="preserve"><value>Huidige 5-uursvenster</value></data>

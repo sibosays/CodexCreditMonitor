@@ -52,9 +52,9 @@ internal sealed class SettingsForm : Form
         _startupToggle.CheckedChanged += (_, _) => MarkChanges();
 
         _alertsToggle = new ToggleSwitch { Checked = _settings.AlertsEnabled, Location = new Point(365, 24) };
-        var alerts = Card(Ui.T("Waarschuwingen bij hoog verbruik", "High-usage warnings"), Ui.T("Toon een duidelijke melding bij 75% en 90% verbruik.", "Show a clear alert at 75% and 90% usage."), 164, _alertsToggle);
+        var alerts = Card(Ui.T("Verbruik- en saldoalerts", "Usage & balance alerts"), Ui.T("Meld bij 75%/90%, een laag saldo of uitzonderlijk snel creditverbruik.", "Alert at 75%/90%, a low balance, or unusually rapid credit use."), 164, _alertsToggle);
         _soundToggle = new ToggleSwitch { Checked = _settings.AlertSoundEnabled, Location = new Point(365, 24), Enabled = _settings.AlertsEnabled };
-        var sound = Card(Ui.T("Waarschuwingsgeluid", "Alert sound"), Ui.T("Speel een kort Windows-signaal bij een verbruikswaarschuwing.", "Play a short Windows sound with a usage alert."), 244, _soundToggle);
+        var sound = Card(Ui.T("Waarschuwingsgeluid", "Alert sound"), Ui.T("Speel een kort Windows-signaal bij elke alert.", "Play a short Windows sound with every alert."), 244, _soundToggle);
         _soundToggle.CheckedChanged += (_, _) =>
         {
             MarkChanges();

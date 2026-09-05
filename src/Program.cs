@@ -7,6 +7,8 @@ namespace CodexCreditMonitor;
 internal static class Program
 {
     private const string AppTitle = "Codex Credit Monitor";
+    // ChatGPT owns purchasing and flexible-credit settings; this monitor only provides a shortcut.
+    private const string CreditSettingsUrl = "https://chatgpt.com/#settings/usage";
     internal static readonly Icon AppIcon = CreateAppIcon();
 
     private static MonitorSettings? _settingsForRestart;
@@ -50,6 +52,29 @@ internal static class Program
         {
             using var preview = new UsageAlertToast(94);
             Application.Run(preview);
+            return;
+        }
+        if (commandLine.Contains("--preview-low-credit", StringComparer.OrdinalIgnoreCase))
+        {
+            using var preview = new CreditBalanceAlertToast(22m);
+            Application.Run(preview);
+            return;
+        }
+        if (commandLine.Contains("--preview-critical-credit", StringComparer.OrdinalIgnoreCase))
+        {
+            using var preview = new CreditBalanceAlertToast(8m);
+            Application.Run(preview);
+            return;
+        }
+        if (commandLine.Contains("--preview-rapid-credit", StringComparer.OrdinalIgnoreCase))
+        {
+            using var preview = new CreditSpendRateAlertToast(new CreditSpendRate(39m, 31m, TimeSpan.FromMinutes(55), 33.8m, CreditSpendAlertLevel.Critical));
+            Application.Run(preview);
+            return;
+        }
+        if (commandLine.Contains("--verify-credit-pace", StringComparer.OrdinalIgnoreCase))
+        {
+            VerifyCreditPaceDetection();
             return;
         }
         try
@@ -100,6 +125,18 @@ internal static class Program
         trayIcon.Visible = true;
         trayIcon.Text = AppTitle;
         RefreshToast? activeRefreshToast = null;
+        Form? activeAlertToast = null;
+
+        void ShowAlert(Form alert)
+        {
+            activeAlertToast?.Close();
+            activeAlertToast = alert;
+            alert.FormClosed += (_, _) =>
+            {
+                if (ReferenceEquals(activeAlertToast, alert)) activeAlertToast = null;
+            };
+            alert.Show();
+        }
 
         void ShowDashboard()
         {
@@ -172,6 +209,11 @@ internal static class Program
             info.ShowDialog();
         }
 
+        void OpenCreditSettings()
+        {
+            Process.Start(new ProcessStartInfo(CreditSettingsUrl) { UseShellExecute = true });
+        }
+
         void BuildTrayMenu()
         {
         menu.Items.Clear();
@@ -209,10 +251,24 @@ internal static class Program
         {
             if (!settings.AlertsEnabled) return;
             if (settings.AlertSoundEnabled) System.Media.SystemSounds.Exclamation.Play();
-            new UsageAlertToast(percent).Show();
+            ShowAlert(new UsageAlertToast(percent));
+        };
+        dashboard.LowCreditWarningRaised += credits =>
+        {
+            if (!settings.AlertsEnabled) return;
+            if (settings.AlertSoundEnabled) System.Media.SystemSounds.Exclamation.Play();
+            ShowAlert(new CreditBalanceAlertToast(credits));
+        };
+        dashboard.RapidCreditSpendWarningRaised += rate =>
+        {
+            if (!settings.AlertsEnabled) return;
+            if (settings.AlertSoundEnabled) System.Media.SystemSounds.Exclamation.Play();
+            ShowAlert(new CreditSpendRateAlertToast(rate));
         };
         dashboard.SettingsRequested += ShowSettings;
         dashboard.InfoRequested += ShowInfo;
+        dashboard.AddCreditsRequested += OpenCreditSettings;
+        dashboard.UseCreditsRequested += OpenCreditSettings;
         dashboard.RefreshCompleted += (usage, error) =>
         {
             activeRefreshToast?.Close();
@@ -249,6 +305,32 @@ internal static class Program
         shortcut.Description = AppTitle;
         shortcut.IconLocation = $"{executable},0";
         shortcut.Save();
+    }
+
+    private static void VerifyCreditPaceDetection()
+    {
+        var now = DateTimeOffset.UtcNow;
+        var rapid = CreditSpendRateDetector.Analyze(
+        [
+            new CreditBalanceSample(now.AddMinutes(-55), 70m),
+            new CreditBalanceSample(now, 39m)
+        ]);
+        var calm = CreditSpendRateDetector.Analyze(
+        [
+            new CreditBalanceSample(now.AddMinutes(-55), 70m),
+            new CreditBalanceSample(now, 66m)
+        ]);
+        var afterTopUp = CreditSpendRateDetector.Analyze(
+        [
+            new CreditBalanceSample(now.AddMinutes(-55), 22m),
+            new CreditBalanceSample(now.AddMinutes(-50), 250m),
+            new CreditBalanceSample(now, 215m)
+        ]);
+
+        if (rapid is not { AlertLevel: CreditSpendAlertLevel.Rapid } ||
+            calm?.AlertLevel != CreditSpendAlertLevel.None ||
+            afterTopUp?.AlertLevel != CreditSpendAlertLevel.Rapid)
+            throw new InvalidOperationException("Credit pace detection verification failed.");
     }
 
     private static Icon CreateAppIcon()

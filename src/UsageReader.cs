@@ -12,9 +12,11 @@ internal sealed record UsageSummary(
     int TodayRequests,
     long TodayTokens,
     IReadOnlyList<SessionUsage> RecentSessions,
+    IReadOnlyList<CreditBalanceSample> CreditBalanceHistory,
     string? Error);
 
 internal sealed record SessionUsage(string Name, string Model, DateTimeOffset LastUpdate, int Requests, long Tokens);
+internal sealed record CreditBalanceSample(DateTimeOffset Timestamp, decimal Balance);
 
 internal static class UsageReader
 {
@@ -24,17 +26,18 @@ internal static class UsageReader
         {
             var sessionsRoot = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".codex", "sessions");
             if (!Directory.Exists(sessionsRoot))
-                return new UsageSummary(false, null, null, null, null, 0, 0, [], Ui.T("Geen lokale Codex-sessies gevonden.", "No local Codex sessions found."));
+                return new UsageSummary(false, null, null, null, null, 0, 0, [], [], Ui.T("Geen lokale Codex-sessies gevonden.", "No local Codex sessions found."));
 
             var newest = new LatestState();
             var sessions = new List<SessionUsage>();
+            var creditBalanceHistory = new List<CreditBalanceSample>();
             var today = DateTimeOffset.Now.Date;
 
             var earliestRelevantFile = DateTime.Now.AddDays(-8);
             foreach (var path in Directory.EnumerateFiles(sessionsRoot, "*.jsonl", SearchOption.AllDirectories)
                          .Where(path => File.GetLastWriteTime(path) >= earliestRelevantFile))
             {
-                sessions.AddRange(ParseSession(path, today, newest));
+                sessions.AddRange(ParseSession(path, today, newest, creditBalanceHistory));
             }
 
             var todaySessions = sessions.Where(s => s.LastUpdate.LocalDateTime.Date == today)
@@ -50,15 +53,19 @@ internal static class UsageReader
                 todaySessions.Sum(s => s.Requests),
                 todaySessions.Sum(s => s.Tokens),
                 todaySessions.Take(5).ToList(),
+                creditBalanceHistory
+                    .Where(sample => sample.Timestamp >= DateTimeOffset.Now.AddHours(-2))
+                    .OrderBy(sample => sample.Timestamp)
+                    .ToList(),
                 newest.LastUpdate is null ? "Nog geen gebruiksgegevens gevonden." : null);
         }
         catch (Exception ex)
         {
-            return new UsageSummary(false, null, null, null, null, 0, 0, [], ex.Message);
+            return new UsageSummary(false, null, null, null, null, 0, 0, [], [], ex.Message);
         }
     }
 
-    private static IReadOnlyList<SessionUsage> ParseSession(string path, DateTimeOffset today, LatestState newest)
+    private static IReadOnlyList<SessionUsage> ParseSession(string path, DateTimeOffset today, LatestState newest, ICollection<CreditBalanceSample> creditBalanceHistory)
     {
         var name = Path.GetFileNameWithoutExtension(path);
         var model = "Onbekend model";
@@ -115,11 +122,22 @@ internal static class UsageReader
                 }
 
                 if (!newest.LastUpdate.HasValue || timestamp >= newest.LastUpdate)
-                {
                     newest.LastUpdate = timestamp;
-                    if (payload.TryGetProperty("rate_limits", out var limits))
+
+                // A token event can carry multiple rate-limit scopes. Only the Codex scope
+                // represents the balance and 5-hour/week allowances shown by this monitor.
+                // For example, a later "premium" scope has no windows and a placeholder
+                // zero balance; accepting it would erase the valid Codex values.
+                if (payload.TryGetProperty("rate_limits", out var limits) && IsCodexLimit(limits))
+                {
+                    var balance = GetDecimalPath(limits, "credits", "balance");
+                    if (balance is decimal value)
+                        creditBalanceHistory.Add(new CreditBalanceSample(timestamp, value));
+
+                    if (!newest.RateLimitsUpdate.HasValue || timestamp >= newest.RateLimitsUpdate)
                     {
-                        newest.CreditBalance = GetDecimalPath(limits, "credits", "balance");
+                        newest.RateLimitsUpdate = timestamp;
+                        newest.CreditBalance = balance;
                         newest.FiveHourPercent = GetDoublePath(limits, "primary", "used_percent");
                         newest.WeekPercent = GetDoublePath(limits, "secondary", "used_percent");
                     }
@@ -184,6 +202,11 @@ internal static class UsageReader
         => element.ValueKind == JsonValueKind.Object && element.TryGetProperty(parent, out var child) &&
            child.ValueKind == JsonValueKind.Object && child.TryGetProperty(property, out var value) && value.TryGetDouble(out var result) ? result : null;
 
+    private static bool IsCodexLimit(JsonElement limits)
+        => limits.ValueKind == JsonValueKind.Object &&
+           limits.TryGetProperty("limit_id", out var limitId) &&
+           string.Equals(limitId.GetString(), "codex", StringComparison.OrdinalIgnoreCase);
+
     private static string ReadableSessionName(string value)
     {
         var marker = value.LastIndexOf('-');
@@ -196,6 +219,7 @@ internal static class UsageReader
         public double? FiveHourPercent { get; set; }
         public double? WeekPercent { get; set; }
         public DateTimeOffset? LastUpdate { get; set; }
+        public DateTimeOffset? RateLimitsUpdate { get; set; }
     }
 
     private sealed class ModelUsage
