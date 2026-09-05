@@ -4,9 +4,10 @@
 /src/bin/
 /src/obj/
 
-# Lokaal geïnstalleerde PortableApps-bouwgereedschappen
+# Lokaal geïnstalleerde PortableApps-bouwgereedschappen en uitgaven
 /tools/
+/Distributie/
+/github-release/
 
-# Bewaar alleen het actuele distributiepakket
-/Distributie/PortableApps/*.paf.exe
-!/Distributie/PortableApps/CodexCreditMonitorPortable_1.0_Dutch.paf.exe
+# Productdocumentatie en pakketten blijven lokaal; de repository volgt alleen broncode.
+/README.md
