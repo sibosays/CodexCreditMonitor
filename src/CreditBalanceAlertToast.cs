@@ -12,7 +12,7 @@ internal sealed class CreditBalanceAlertToast : Form
         var urgent = credits <= 10m;
         AutoScaleMode = AutoScaleMode.Dpi;
         BackColor = Color.FromArgb(23, 36, 53);
-        ClientSize = new Size(388, 158);
+        ClientSize = new Size(388, 174);
         ControlBox = false;
         FormBorderStyle = FormBorderStyle.None;
         ShowInTaskbar = false;
@@ -36,21 +36,23 @@ internal sealed class CreditBalanceAlertToast : Form
         close.Cursor = Cursors.Hand;
         close.Click += (_, _) => Close();
 
-        var balance = NewLabel($"{credits:N1}", 27, FontStyle.Bold, Color.White);
-        balance.Location = new Point(21, 53);
-        var label = NewLabel(Ui.T("credits\nbeschikbaar", "credits\nremaining"), 10, FontStyle.Regular, Color.FromArgb(205, 220, 238));
+        var balance = NewLabel($"{credits:N1}", 29, FontStyle.Bold, Color.White);
+        balance.Location = new Point(21, 54);
+        var label = NewLabel(Ui.T("BESCHIKBARE CREDITS", "AVAILABLE CREDITS"), 9, FontStyle.Regular, Color.FromArgb(177, 198, 223));
         label.Location = new Point(150, 58);
         label.AutoSize = false;
-        label.Size = new Size(180, 42);
+        label.Size = new Size(200, 18);
+        var state = NewLabel(Ui.T("tegoed is laag", "balance is low"), 12, FontStyle.Bold, urgent ? Color.FromArgb(255, 174, 174) : Color.FromArgb(255, 210, 112));
+        state.Location = new Point(150, 79);
         var detail = NewLabel(
-            urgent ? Ui.T("Bijna op. Pauzeer intensieve taken even.", "Nearly exhausted. Pause intensive tasks for a moment.") : Ui.T("Je beschikbare credittegoed is laag.", "Your available credit balance is low."),
+            urgent ? Ui.T("Bijna op. Vul je tegoed aan voordat intensieve taken onderbreken.", "Nearly exhausted. Top up before intensive tasks are interrupted.") : Ui.T("Je beschikbare credittegoed is laag. Plan je volgende opwaardering.", "Your available credit balance is low. Plan your next top-up."),
             9,
             FontStyle.Regular,
             Color.FromArgb(170, 193, 219));
-        detail.Location = new Point(23, 120);
+        detail.Location = new Point(23, 132);
         detail.AutoSize = false;
-        detail.Size = new Size(325, 20);
-        Controls.AddRange([icon, title, close, balance, label, detail]);
+        detail.Size = new Size(340, 24);
+        Controls.AddRange([icon, title, close, balance, label, state, detail]);
 
         _dismissTimer.Tick += (_, _) => Close();
         Shown += (_, _) => _dismissTimer.Start();

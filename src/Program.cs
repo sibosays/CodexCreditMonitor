@@ -94,7 +94,7 @@ internal static class Program
         }
         if (commandLine.Contains("--preview-rapid-credit", StringComparer.OrdinalIgnoreCase))
         {
-            using var preview = new CreditSpendRateAlertToast(new CreditSpendRate(39m, 31m, TimeSpan.FromMinutes(55), 33.8m, CreditSpendAlertLevel.Critical));
+            using var preview = new CreditSpendRateAlertToast(new CreditSpendRate(31m, 39m, TimeSpan.FromMinutes(55), 33.8m, CreditSpendAlertLevel.Critical));
             Application.Run(preview);
             return;
         }

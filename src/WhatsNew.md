@@ -4,6 +4,7 @@
 ## Nieuw in 2.1.1
 
 - De buitenmarges van alle dashboardkaarten zijn nu links en rechts exact gelijk. De twee dagkaarten volgen dezelfde rasterbreedte.
+- Waarschuwingstoasts voor verbruik, laag saldo en snel creditverbruik hebben nu dezelfde duidelijke opbouw: hoofdwaarde, statusregel en concrete toelichting met voldoende ruimte.
 
 ## Eerder in 2.1
 
@@ -41,6 +42,7 @@ Het dashboard open je vanuit het systeemvak. Instellingen, handmatig vernieuwen 
 ## New in 2.1.1
 
 - All dashboard cards now have precisely equal left and right outer margins. The two daily cards follow the same grid width.
+- Usage, low-balance, and rapid-credit-use warning toasts now share a clear hierarchy: primary value, status line, and actionable guidance with sufficient spacing.
 
 ## Earlier in 2.1
 

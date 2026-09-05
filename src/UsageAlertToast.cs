@@ -12,7 +12,7 @@ internal sealed class UsageAlertToast : Form
         var urgent = percent >= 90;
         AutoScaleMode = AutoScaleMode.Dpi;
         BackColor = Color.FromArgb(23, 36, 53);
-        ClientSize = new Size(388, 158);
+        ClientSize = new Size(388, 174);
         ControlBox = false;
         FormBorderStyle = FormBorderStyle.None;
         ShowInTaskbar = false;
@@ -36,21 +36,23 @@ internal sealed class UsageAlertToast : Form
         close.Cursor = Cursors.Hand;
         close.Click += (_, _) => Close();
 
-        var percentage = NewLabel($"{percent:0}%", 27, FontStyle.Bold, Color.White);
-        percentage.Location = new Point(21, 53);
-        var label = NewLabel(Ui.T("van je huidige\n5-uursvenster", "of your current\n5-hour window"), 10, FontStyle.Regular, Color.FromArgb(205, 220, 238));
+        var percentage = NewLabel($"{percent:0}%", 29, FontStyle.Bold, Color.White);
+        percentage.Location = new Point(21, 54);
+        var label = NewLabel(Ui.T("HUIDIG 5-UURSVENSTER", "CURRENT 5-HOUR WINDOW"), 9, FontStyle.Regular, Color.FromArgb(177, 198, 223));
         label.Location = new Point(150, 58);
         label.AutoSize = false;
-        label.Size = new Size(180, 42);
+        label.Size = new Size(200, 18);
+        var state = NewLabel(Ui.T($"{percent:0}% verbruikt", $"{percent:0}% used"), 12, FontStyle.Bold, urgent ? Color.FromArgb(255, 174, 174) : Color.FromArgb(255, 210, 112));
+        state.Location = new Point(150, 79);
         var detail = NewLabel(
-            urgent ? Ui.T("Bijna op. Stel intensieve taken even uit.", "Nearly exhausted. Pause intensive tasks for a moment.") : Ui.T("Houd je credits in de gaten.", "Keep an eye on your credits."),
+            urgent ? Ui.T("Bijna op. Pauzeer intensieve taken om onderbreking te voorkomen.", "Nearly exhausted. Pause intensive tasks to avoid interruption.") : Ui.T("Je nadert de limiet. Houd je resterende capaciteit in de gaten.", "You are approaching the limit. Keep an eye on your remaining capacity."),
             9,
             FontStyle.Regular,
             Color.FromArgb(170, 193, 219));
-        detail.Location = new Point(23, 120);
+        detail.Location = new Point(23, 132);
         detail.AutoSize = false;
-        detail.Size = new Size(325, 20);
-        Controls.AddRange([icon, title, close, percentage, label, detail]);
+        detail.Size = new Size(340, 24);
+        Controls.AddRange([icon, title, close, percentage, label, state, detail]);
 
         _dismissTimer.Tick += (_, _) => Close();
         Shown += (_, _) => _dismissTimer.Start();

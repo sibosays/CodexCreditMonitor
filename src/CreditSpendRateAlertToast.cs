@@ -12,7 +12,7 @@ internal sealed class CreditSpendRateAlertToast : Form
         var urgent = rate.AlertLevel == CreditSpendAlertLevel.Critical;
         AutoScaleMode = AutoScaleMode.Dpi;
         BackColor = Color.FromArgb(23, 36, 53);
-        ClientSize = new Size(388, 158);
+        ClientSize = new Size(388, 174);
         ControlBox = false;
         FormBorderStyle = FormBorderStyle.None;
         ShowInTaskbar = false;
@@ -35,21 +35,23 @@ internal sealed class CreditSpendRateAlertToast : Form
         close.Cursor = Cursors.Hand;
         close.Click += (_, _) => Close();
 
-        var spent = NewLabel($"−{rate.CreditsSpent:N1}", 27, FontStyle.Bold, Color.White);
-        spent.Location = new Point(21, 53);
-        var interval = NewLabel(Ui.T($"credits in\n{FormatDuration(rate.ObservedOver, true)}", $"credits in\n{FormatDuration(rate.ObservedOver, false)}"), 10, FontStyle.Regular, Color.FromArgb(205, 220, 238));
+        var spent = NewLabel($"−{rate.CreditsSpent:N1}", 29, FontStyle.Bold, Color.White);
+        spent.Location = new Point(21, 54);
+        var interval = NewLabel(Ui.T("CREDITS VERBRUIKT", "CREDITS SPENT"), 9, FontStyle.Regular, Color.FromArgb(177, 198, 223));
         interval.Location = new Point(150, 58);
         interval.AutoSize = false;
-        interval.Size = new Size(180, 42);
+        interval.Size = new Size(200, 18);
+        var state = NewLabel(Ui.T($"in {FormatDuration(rate.ObservedOver, true)}", $"in {FormatDuration(rate.ObservedOver, false)}"), 12, FontStyle.Bold, urgent ? Color.FromArgb(255, 174, 174) : Color.FromArgb(255, 210, 112));
+        state.Location = new Point(150, 79);
         var detail = NewLabel(
             Ui.T($"{rate.CreditsPerHour:N1} credits/uur · {rate.CurrentBalance:N1} beschikbaar", $"{rate.CreditsPerHour:N1} credits/hour · {rate.CurrentBalance:N1} remaining"),
             9,
             FontStyle.Regular,
             Color.FromArgb(170, 193, 219));
-        detail.Location = new Point(23, 120);
+        detail.Location = new Point(23, 132);
         detail.AutoSize = false;
-        detail.Size = new Size(340, 20);
-        Controls.AddRange([icon, title, close, spent, interval, detail]);
+        detail.Size = new Size(340, 24);
+        Controls.AddRange([icon, title, close, spent, interval, state, detail]);
 
         _dismissTimer.Tick += (_, _) => Close();
         Shown += (_, _) => _dismissTimer.Start();
