@@ -8,6 +8,7 @@
 - Beide acties hebben tweetalige, meerregelige tooltips. Gebruik `--preview-low-credits`, `--preview-use-credits` of `--preview-credit-actions` om de drie staten lokaal te bekijken.
 - Beide acties openen **Usage & Billing** in ChatGPT. De monitor koopt geen credits en wijzigt geen instelling zelfstandig.
 - Herstelt het vaste Windows-appicoon in de v2.1-uitvoer. De actuele verbruiksuitlezer accepteert zowel de klassieke als de nieuwe per-limietstructuur uit lokale Codex-logs, zodat saldo en beide verbruiksvensters ook in de vernieuwde toast blijven staan.
+- Herstelt ook het zichtbaar openen van het dashboard vanuit de lokale appuitvoer.
 
 ## Functionele beschrijving
 
@@ -36,6 +37,7 @@ Het dashboard open je vanuit het systeemvak. Instellingen, handmatig vernieuwen 
 - Both actions have bilingual, multiline tooltips. Use `--preview-low-credits`, `--preview-use-credits`, or `--preview-credit-actions` to view the three states locally.
 - Both actions open **Usage & Billing** in ChatGPT. The monitor never purchases credits or changes a setting on its own.
 - Restores the fixed Windows application icon in the v2.1 output. The usage reader accepts both the classic and the new per-limit structure in local Codex logs, keeping the balance and both usage windows in the refreshed toast.
+- Also restores visibly opening the dashboard from the local app output.
 
 ## Functional overview
 

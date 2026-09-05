@@ -36,6 +36,11 @@ internal static class Program
     {
         ApplicationConfiguration.Initialize();
         var commandLine = Environment.GetCommandLineArgs();
+        if (commandLine.Contains("--show-dashboard", StringComparer.OrdinalIgnoreCase))
+        {
+            RunVisibleDashboard();
+            return;
+        }
         if (commandLine.Contains("--preview-low-credits", StringComparer.OrdinalIgnoreCase))
         {
             RunDashboardPreview(50m, 68d);
@@ -370,6 +375,19 @@ internal static class Program
             [new CreditBalanceSample(now.AddMinutes(-30), balance + 4m), new CreditBalanceSample(now, balance)],
             null));
         Application.Run(preview);
+    }
+
+    private static void RunVisibleDashboard()
+    {
+        var settings = MonitorSettings.Load();
+        Ui.SetLanguage(settings.Language);
+        using var dashboard = new DashboardForm();
+        dashboard.SetRefreshInterval(Math.Clamp(settings.RefreshIntervalMinutes, 1, 5));
+        dashboard.SetAutoRecharge(settings.AutoRechargeThreshold, settings.AutoRechargeTarget);
+        dashboard.CreateControl();
+        dashboard.StartRealtimeMonitoring();
+        dashboard.RefreshUsage();
+        Application.Run(dashboard);
     }
 
     private static void RenderDashboardPreview(decimal balance, double weekPercent)
