@@ -6,6 +6,9 @@ namespace CodexCreditMonitor;
 internal sealed class DashboardForm : Form
 {
     private const decimal AddCreditsThreshold = 50m;
+    // The root has 22 px padding on both sides: keep every full-width surface
+    // at the remaining 406 px so the dashboard has identical outer margins.
+    private const int ContentWidth = 406;
     private readonly Label _balance = NewLabel(27, FontStyle.Bold, Color.White);
     private readonly Panel _autoRechargeBadge = new() { BackColor = Color.Transparent, Visible = false };
     private readonly Label _balanceNote = NewLabel(9, FontStyle.Bold, Color.FromArgb(191, 231, 245));
@@ -72,7 +75,7 @@ internal sealed class DashboardForm : Form
 
         // FlowLayoutPanel does not honor Dock sizing for child controls; make the header
         // explicitly as wide as the cards so the controls on its right stay visible.
-        var header = new Panel { Width = 402, Height = 101, Margin = Padding.Empty, BackColor = Color.Transparent };
+        var header = new Panel { Width = ContentWidth, Height = 101, Margin = Padding.Empty, BackColor = Color.Transparent };
         // Five compact header actions leave 190 logical pixels for the product name.
         // Keep the full title visible instead of letting it run beneath an action.
         var title = NewLabel(12, FontStyle.Bold, Color.White);
@@ -138,9 +141,9 @@ internal sealed class DashboardForm : Form
         _week.Width = 350;
         bars.Controls.AddRange([_fiveHour, _week]);
 
-        var metrics = new Panel { Width = 402, Height = 88, Margin = Padding.Empty, BackColor = Color.Transparent };
+        var metrics = new Panel { Width = ContentWidth, Height = 88, Margin = Padding.Empty, BackColor = Color.Transparent };
         var requestCard = SmallCard(Ui.S("Dashboard.Today"), Ui.S("Dashboard.ModelEvents"), _todayRequests, new Point(0, 0));
-        var tokenCard = SmallCard(Ui.S("Dashboard.Today"), Ui.S("Dashboard.ProcessedTokens"), _todayTokens, new Point(204, 0));
+        var tokenCard = SmallCard(Ui.S("Dashboard.Today"), Ui.S("Dashboard.ProcessedTokens"), _todayTokens, new Point(206, 0));
         requestCard.Name = "requestCard";
         tokenCard.Name = "tokenCard";
         metrics.Controls.AddRange([requestCard, tokenCard]);
@@ -499,7 +502,7 @@ internal sealed class DashboardForm : Form
     {
         var card = Card(82);
         card.Location = location;
-        card.Size = new Size(198, 82);
+        card.Size = new Size(200, 82);
         var label = NewLabel(9, FontStyle.Regular, Color.FromArgb(154, 173, 195));
         label.Text = eyebrow;
         label.Location = new Point(14, 11);
@@ -514,8 +517,8 @@ internal sealed class DashboardForm : Form
         return card;
     }
 
-    private static Panel Card(int height) => new() { Width = 402, Height = height, Margin = Padding.Empty, BackColor = Color.FromArgb(27, 39, 57) };
-    private static Panel Spacer(int height) => new() { Height = height, Width = 402, Margin = Padding.Empty, BackColor = Color.Transparent };
+    private static Panel Card(int height) => new() { Width = ContentWidth, Height = height, Margin = Padding.Empty, BackColor = Color.FromArgb(27, 39, 57) };
+    private static Panel Spacer(int height) => new() { Height = height, Width = ContentWidth, Margin = Padding.Empty, BackColor = Color.Transparent };
     private static Label NewLabel(float size, FontStyle style, Color color) => new() { Font = new Font("Segoe UI", size, style), ForeColor = color, BackColor = Color.Transparent };
     private static string FormatTokens(long value) => value >= 1_000_000 ? $"{value / 1_000_000d:0.0}M" : value >= 1_000 ? $"{value / 1_000d:0.0}K" : value.ToString("N0");
 

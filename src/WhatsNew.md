@@ -1,7 +1,11 @@
 <!-- nl -->
-# Codex Credit Monitor 2.1
+# Codex Credit Monitor 2.1.1
 
-## Nieuw in 2.1
+## Nieuw in 2.1.1
+
+- De buitenmarges van alle dashboardkaarten zijn nu links en rechts exact gelijk. De twee dagkaarten volgen dezelfde rasterbreedte.
+
+## Eerder in 2.1
 
 - **Credits toevoegen** verschijnt alleen bij een saldo van 50 credits of lager. De plusactie opent Usage & Billing in ChatGPT.
 - **Credits gebruiken** verschijnt alleen wanneer de inbegrepen weekbundel op is én lokaal positief credittegoed beschikbaar is. Het creditkaartje met bliksem opent Usage & Billing voor extra Codex-gebruik.
@@ -32,9 +36,13 @@ Codex Credit Monitor is een lichte Windows-systeemvakapp die je lokale Codex-ses
 Het dashboard open je vanuit het systeemvak. Instellingen, handmatig vernieuwen en afsluiten zijn daar eveneens beschikbaar.
 
 <!-- en -->
-# Codex Credit Monitor 2.1
+# Codex Credit Monitor 2.1.1
 
-## New in 2.1
+## New in 2.1.1
+
+- All dashboard cards now have precisely equal left and right outer margins. The two daily cards follow the same grid width.
+
+## Earlier in 2.1
 
 - **Add credits** appears only at a balance of 50 credits or below. The plus action opens Usage & Billing in ChatGPT.
 - **Use credits** appears only when the included weekly allowance is exhausted and a positive local credit balance is available. The credit-card-with-lightning action opens Usage & Billing for additional Codex usage.
