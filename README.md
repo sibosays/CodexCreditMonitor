@@ -8,21 +8,21 @@ Codex Credit Monitor turns local Codex session records into a clear dashboard fo
 
 ## At a glance
 
-![Codex Credit Monitor dashboard showing the available credit balance, five-hour and weekly usage, activity totals, and recent sessions.](https://raw.githubusercontent.com/sibosays/CodexCreditMonitor/57d14f52c0f454fe03fe0026510bb139ed70935c/assets/dashboard-overview.png)
+![Codex Credit Monitor dashboard showing both contextual credit actions in their attention state.](assets/dashboard-credit-actions-pulse.png)
 
-*The dashboard presents local Codex usage in one compact Windows system-tray companion.*
+*The v2.1 dashboard shows both contextual credit actions in their attention state.*
 
 ## Download
 
 Download the current portable package directly from this repository:
 
-**[Download Codex Credit Monitor Portable v2.0 (ZIP)](https://github.com/sibosays/CodexCreditMonitor/raw/refs/heads/main/downloads/CodexCreditMonitorPortable_2.0.zip)**
+**[Download Codex Credit Monitor Portable v2.1 (ZIP)](https://github.com/sibosays/CodexCreditMonitor/raw/refs/heads/main/downloads/CodexCreditMonitorPortable_2.1.zip)**
 
 The repository deliberately contains product information only. The application source code is not published here.
 
 ## Install and start
 
-1. Download `CodexCreditMonitorPortable_2.0.zip` using the link above.
+1. Download `CodexCreditMonitorPortable_2.1.zip` using the link above.
 2. Right-click the ZIP file and choose **Extract All**.
 3. Open the extracted `CodexCreditMonitorPortable` folder.
 4. Run `CodexCreditMonitorPortable.exe`.
@@ -38,6 +38,7 @@ For an integrity check, compare the SHA-256 value in [SHA256SUMS.txt](downloads/
 - Optional visible and audible warnings at 75% and 90% of the five-hour window, when the remaining balance reaches 25 or 10 credits, and when credits are consumed unusually quickly (12 credits in 30 minutes or 30 credits in two hours).
 - A clear in-app status when the included weekly allowance is exhausted and credits are in use, plus the locally observed credit-use pace.
 - Your configured automatic-recharge threshold and target as context only; the app never changes that setting for you.
+- Compact **Add credits** and **Use credits** shortcuts in the dashboard header. They open ChatGPT's Usage & Billing page; the app never purchases credits or changes account settings.
 - English and Dutch application interfaces, selectable in **Settings**.
 
 ## Privacy and scope
