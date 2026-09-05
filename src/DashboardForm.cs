@@ -531,9 +531,9 @@ internal enum HeaderIcon
 internal sealed class HeaderIconButton : Control
 {
     private readonly HeaderIcon _icon;
-    private readonly System.Windows.Forms.Timer _attentionTimer = new() { Interval = 180 };
     private bool _hovered;
     private int _attentionFrame = -1;
+    private int _attentionSequence;
 
     public HeaderIconButton(HeaderIcon icon)
     {
@@ -543,22 +543,22 @@ internal sealed class HeaderIconButton : Control
         SetStyle(ControlStyles.UserPaint | ControlStyles.AllPaintingInWmPaint | ControlStyles.OptimizedDoubleBuffer | ControlStyles.SupportsTransparentBackColor, true);
         BackColor = Color.Transparent;
         TabStop = true;
-        _attentionTimer.Tick += (_, _) =>
-        {
-            _attentionFrame++;
-            if (_attentionFrame >= 16)
-            {
-                _attentionFrame = -1;
-                _attentionTimer.Stop();
-            }
-            Invalidate();
-        };
     }
 
-    public void PulseAttention()
+    public async void PulseAttention()
     {
-        _attentionFrame = 0;
-        _attentionTimer.Start();
+        var sequence = ++_attentionSequence;
+        // Start after the window has actually settled on screen, then pulse for five seconds.
+        await Task.Delay(600);
+        for (var frame = 0; frame < 24; frame++)
+        {
+            if (sequence != _attentionSequence || IsDisposed) return;
+            _attentionFrame = frame;
+            Invalidate();
+            await Task.Delay(200);
+        }
+        if (sequence != _attentionSequence || IsDisposed) return;
+        _attentionFrame = -1;
         Invalidate();
     }
 
@@ -586,9 +586,13 @@ internal sealed class HeaderIconButton : Control
         }
         if (_attentionFrame >= 0)
         {
-            var alpha = _attentionFrame % 2 == 0 ? 112 : 44;
-            using var attention = new SolidBrush(Color.FromArgb(alpha, 87, 184, 240));
-            eventArgs.Graphics.FillEllipse(attention, 0, 0, 36, 32);
+            var phase = _attentionFrame % 6;
+            var alpha = phase is 0 or 1 ? 210 : phase is 2 or 3 ? 120 : 55;
+            var inset = phase is 0 or 1 ? 0 : phase is 2 or 3 ? 2 : 4;
+            using var attentionFill = new SolidBrush(Color.FromArgb(alpha / 3, 255, 196, 93));
+            using var attentionRing = new Pen(Color.FromArgb(alpha, 255, 215, 133), 2.4f);
+            eventArgs.Graphics.FillEllipse(attentionFill, inset, inset, Width - inset * 2, Height - inset * 2);
+            eventArgs.Graphics.DrawEllipse(attentionRing, inset + 1, inset + 1, Width - inset * 2 - 2, Height - inset * 2 - 2);
         }
 
         using var pen = new Pen(Color.FromArgb(197, 220, 252), 2.1f) { StartCap = LineCap.Round, EndCap = LineCap.Round, LineJoin = LineJoin.Round };
