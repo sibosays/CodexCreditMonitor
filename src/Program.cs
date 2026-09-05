@@ -326,6 +326,10 @@ internal static class Program
             {
                 Application.Idle -= showAfterStartup;
                 ShowDashboard();
+                if (previewUsage is not null)
+                {
+                    _ = PulsePreviewActionsAfterDashboardIsVisibleAsync(dashboard);
+                }
             };
             Application.Idle += showAfterStartup;
         }
@@ -399,6 +403,12 @@ internal static class Program
             [new SessionUsage("preview", "gpt-5.6-sol", now.AddMinutes(-8), 6, 82_400)],
             [new CreditBalanceSample(now.AddMinutes(-30), balance + 4m), new CreditBalanceSample(now, balance)],
             null);
+    }
+
+    private static async Task PulsePreviewActionsAfterDashboardIsVisibleAsync(DashboardForm dashboard)
+    {
+        await Task.Delay(5_000);
+        if (!dashboard.IsDisposed) dashboard.PulseVisibleCreditActions();
     }
 
     private static Icon CreateAppIcon()

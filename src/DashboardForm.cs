@@ -72,7 +72,7 @@ internal sealed class DashboardForm : Form
 
         // FlowLayoutPanel does not honor Dock sizing for child controls; make the header
         // explicitly as wide as the cards so the controls on its right stay visible.
-        var header = new Panel { Width = 402, Height = 94, Margin = Padding.Empty, BackColor = Color.Transparent };
+        var header = new Panel { Width = 402, Height = 101, Margin = Padding.Empty, BackColor = Color.Transparent };
         // Five compact header actions leave 190 logical pixels for the product name.
         // Keep the full title visible instead of letting it run beneath an action.
         var title = NewLabel(13, FontStyle.Bold, Color.White);
@@ -80,7 +80,7 @@ internal sealed class DashboardForm : Form
         title.Location = new Point(0, 0);
         title.AutoSize = true;
         _updated.Text = Ui.S("Dashboard.LocalTracking");
-        _updated.Location = new Point(1, 29);
+        _updated.Location = new Point(1, 36);
         _updated.AutoSize = true;
         var refresh = new HeaderIconButton(HeaderIcon.Refresh) { Location = new Point(366, 0), Anchor = AnchorStyles.Top | AnchorStyles.Right, AccessibleName = Ui.T("Vernieuwen", "Refresh") };
         refresh.Click += (_, _) => RefreshUsage();
@@ -93,11 +93,14 @@ internal sealed class DashboardForm : Form
         _addCredits = new HeaderIconButton(HeaderIcon.AddCredits) { Location = new Point(190, 0), Anchor = AnchorStyles.Top | AnchorStyles.Right, Visible = false };
         _addCredits.Click += (_, _) => AddCreditsRequested?.Invoke();
         UpdateCreditActionText();
-        Shown += (_, _) => PulsePendingCreditActions();
+        VisibleChanged += (_, _) =>
+        {
+            if (Visible) PulseVisibleCreditActions();
+        };
         _headerToolTip.SetToolTip(info, Ui.T("Info", "About"));
         _headerToolTip.SetToolTip(settings, Ui.T("Instellingen", "Settings"));
         _headerToolTip.SetToolTip(refresh, Ui.T("Nu vernieuwen", "Refresh now"));
-        _refreshBanner.Location = new Point(0, 52);
+        _refreshBanner.Location = new Point(0, 59);
         _refreshBanner.Width = 262;
         _refreshBanner.Padding = new Padding(9, 3, 8, 2);
         _refreshBannerText.Dock = DockStyle.Fill;
@@ -214,6 +217,20 @@ internal sealed class DashboardForm : Form
     {
         _refreshTimer.Stop();
         ApplyUsage(usage);
+    }
+
+    internal void PulseVisibleCreditActions()
+    {
+        if (_addCredits.Visible)
+        {
+            _pulseAddCreditsWhenShown = false;
+            _addCredits.PulseAttention();
+        }
+        if (_useCredits.Visible)
+        {
+            _pulseUseCreditsWhenShown = false;
+            _useCredits.PulseAttention();
+        }
     }
 
     private void OnLanguageChanged()
