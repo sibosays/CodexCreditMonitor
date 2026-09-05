@@ -9,6 +9,9 @@
 - Beide acties openen **Usage & Billing** in ChatGPT. De monitor koopt geen credits en wijzigt geen instelling zelfstandig.
 - Herstelt het vaste Windows-appicoon in de v2.1-uitvoer. De actuele verbruiksuitlezer accepteert zowel de klassieke als de nieuwe per-limietstructuur uit lokale Codex-logs, zodat saldo en beide verbruiksvensters ook in de vernieuwde toast blijven staan.
 - Herstelt ook het zichtbaar openen van het dashboard vanuit de lokale appuitvoer.
+- Een enkel zichtbaar crediticoon sluit nu direct aan op de vaste headericonen; de plusactie opent `https://chatgpt.com/#settings/Usage`.
+- De credittooltips verschijnen snel en blijven lang genoeg staan om de tweetalige toelichting te lezen.
+- Wanneer een creditactie beschikbaar wordt, pulseert alleen dat icoon kort als subtiele visuele attentie.
 
 ## Functionele beschrijving
 
@@ -38,6 +41,9 @@ Het dashboard open je vanuit het systeemvak. Instellingen, handmatig vernieuwen 
 - Both actions open **Usage & Billing** in ChatGPT. The monitor never purchases credits or changes a setting on its own.
 - Restores the fixed Windows application icon in the v2.1 output. The usage reader accepts both the classic and the new per-limit structure in local Codex logs, keeping the balance and both usage windows in the refreshed toast.
 - Also restores visibly opening the dashboard from the local app output.
+- A single visible credit icon now sits directly next to the fixed header icons; the plus action opens `https://chatgpt.com/#settings/Usage`.
+- Credit tooltips now appear promptly and remain visible long enough to read their bilingual guidance.
+- When a credit action becomes available, only that icon briefly pulses as a subtle visual cue.
 
 ## Functional overview
 

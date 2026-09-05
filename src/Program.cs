@@ -8,7 +8,7 @@ internal static class Program
 {
     private const string AppTitle = "Codex Credit Monitor";
     // ChatGPT owns purchasing and flexible-credit settings; this monitor only provides a shortcut.
-    private const string CreditSettingsUrl = "https://chatgpt.com/#settings/usage";
+    private const string CreditSettingsUrl = "https://chatgpt.com/#settings/Usage";
     internal static readonly Icon AppIcon = CreateAppIcon();
 
     private static MonitorSettings? _settingsForRestart;
@@ -36,25 +36,23 @@ internal static class Program
     {
         ApplicationConfiguration.Initialize();
         var commandLine = Environment.GetCommandLineArgs();
-        if (commandLine.Contains("--show-dashboard", StringComparer.OrdinalIgnoreCase))
-        {
-            RunVisibleDashboard();
-            return;
-        }
+        var showDashboardOnLaunch = commandLine.Contains("--show-dashboard", StringComparer.OrdinalIgnoreCase);
+        UsageSummary? previewUsage = null;
         if (commandLine.Contains("--preview-low-credits", StringComparer.OrdinalIgnoreCase))
         {
-            RunDashboardPreview(50m, 68d);
-            return;
+            previewUsage = CreatePreviewUsage(50m, 68d);
         }
-        if (commandLine.Contains("--preview-use-credits", StringComparer.OrdinalIgnoreCase))
+        else if (commandLine.Contains("--preview-use-credits", StringComparer.OrdinalIgnoreCase))
         {
-            RunDashboardPreview(80m, 100d);
-            return;
+            previewUsage = CreatePreviewUsage(80m, 100d);
         }
-        if (commandLine.Contains("--preview-credit-actions", StringComparer.OrdinalIgnoreCase))
+        else if (commandLine.Contains("--preview-credit-actions", StringComparer.OrdinalIgnoreCase))
         {
-            RunDashboardPreview(34m, 100d);
-            return;
+            previewUsage = CreatePreviewUsage(34m, 100d);
+        }
+        if (previewUsage is not null)
+        {
+            showDashboardOnLaunch = true;
         }
         if (commandLine.Contains("--render-credit-actions", StringComparer.OrdinalIgnoreCase))
         {
@@ -312,8 +310,25 @@ internal static class Program
         SetRefreshInterval(Math.Clamp(settings.RefreshIntervalMinutes, 1, 5));
         dashboard.SetAutoRecharge(settings.AutoRechargeThreshold, settings.AutoRechargeTarget);
         dashboard.CreateControl();
-        dashboard.StartRealtimeMonitoring();
-        dashboard.RefreshUsage();
+        if (previewUsage is not null)
+        {
+            dashboard.ShowPreviewUsage(previewUsage);
+        }
+        else
+        {
+            dashboard.StartRealtimeMonitoring();
+            dashboard.RefreshUsage();
+        }
+        if (showDashboardOnLaunch)
+        {
+            EventHandler? showAfterStartup = null;
+            showAfterStartup = (_, _) =>
+            {
+                Application.Idle -= showAfterStartup;
+                ShowDashboard();
+            };
+            Application.Idle += showAfterStartup;
+        }
         Application.Run(applicationContext);
         showDashboardRegistration.Unregister(null);
     }
@@ -356,38 +371,6 @@ internal static class Program
             calm?.AlertLevel != CreditSpendAlertLevel.None ||
             afterTopUp?.AlertLevel != CreditSpendAlertLevel.Rapid)
             throw new InvalidOperationException("Credit pace detection verification failed.");
-    }
-
-    private static void RunDashboardPreview(decimal balance, double weekPercent)
-    {
-        var now = DateTimeOffset.Now;
-        using var preview = new DashboardForm();
-        preview.SetAutoRecharge(125, 250);
-        preview.ShowPreviewUsage(new UsageSummary(
-            true,
-            balance,
-            42d,
-            weekPercent,
-            now,
-            128,
-            1_248_730,
-            [new SessionUsage("preview", "gpt-5.6-sol", now.AddMinutes(-8), 6, 82_400)],
-            [new CreditBalanceSample(now.AddMinutes(-30), balance + 4m), new CreditBalanceSample(now, balance)],
-            null));
-        Application.Run(preview);
-    }
-
-    private static void RunVisibleDashboard()
-    {
-        var settings = MonitorSettings.Load();
-        Ui.SetLanguage(settings.Language);
-        using var dashboard = new DashboardForm();
-        dashboard.SetRefreshInterval(Math.Clamp(settings.RefreshIntervalMinutes, 1, 5));
-        dashboard.SetAutoRecharge(settings.AutoRechargeThreshold, settings.AutoRechargeTarget);
-        dashboard.CreateControl();
-        dashboard.StartRealtimeMonitoring();
-        dashboard.RefreshUsage();
-        Application.Run(dashboard);
     }
 
     private static void RenderDashboardPreview(decimal balance, double weekPercent)

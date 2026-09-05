@@ -24,7 +24,13 @@ internal sealed class DashboardForm : Form
     private readonly System.Windows.Forms.Timer _bannerTimer = new() { Interval = 5_000 };
     private readonly Panel _refreshBanner = new() { Height = 24, BackColor = Color.Transparent, Visible = false };
     private readonly Label _refreshBannerText = NewLabel(9, FontStyle.Bold, Color.FromArgb(220, 238, 255));
-    private readonly ToolTip _headerToolTip = new();
+    private readonly ToolTip _headerToolTip = new()
+    {
+        InitialDelay = 250,
+        ReshowDelay = 100,
+        AutoPopDelay = 10_000,
+        ShowAlways = true
+    };
     private readonly HeaderIconButton _addCredits;
     private readonly HeaderIconButton _useCredits;
     private double? _lastWarnedPercent;
@@ -35,6 +41,8 @@ internal sealed class DashboardForm : Form
     private int _autoRechargeThreshold;
     private int _autoRechargeTarget;
     private FileSystemWatcher? _sessionWatcher;
+    private bool _pulseAddCreditsWhenShown;
+    private bool _pulseUseCreditsWhenShown;
 
     public event Action<double>? WarningRaised;
     public event Action<decimal>? LowCreditWarningRaised;
@@ -85,6 +93,7 @@ internal sealed class DashboardForm : Form
         _addCredits = new HeaderIconButton(HeaderIcon.AddCredits) { Location = new Point(190, 0), Anchor = AnchorStyles.Top | AnchorStyles.Right, Visible = false };
         _addCredits.Click += (_, _) => AddCreditsRequested?.Invoke();
         UpdateCreditActionText();
+        Shown += (_, _) => PulsePendingCreditActions();
         _headerToolTip.SetToolTip(info, Ui.T("Info", "About"));
         _headerToolTip.SetToolTip(settings, Ui.T("Instellingen", "Settings"));
         _headerToolTip.SetToolTip(refresh, Ui.T("Nu vernieuwen", "Refresh now"));
@@ -334,10 +343,36 @@ internal sealed class DashboardForm : Form
 
     private void UpdateCreditActionVisibility(UsageSummary usage)
     {
+        var addCreditsWasVisible = _addCredits.Visible;
+        var useCreditsWasVisible = _useCredits.Visible;
         _addCredits.Visible = usage.CreditBalance is decimal balance && balance <= AddCreditsThreshold;
         // The portal itself is not inspected. A fully used included allowance plus a positive
         // local balance is the reliable local signal that credit-backed usage is relevant.
         _useCredits.Visible = usage.CreditBalance is decimal available && available > 0m && usage.WeekPercent is >= 100d;
+
+        // Keep a single conditional action connected to the fixed header actions.
+        // When both actions are present, they use the two reserved slots in order.
+        _addCredits.Location = new Point(_useCredits.Visible ? 190 : 234, 0);
+        _useCredits.Location = new Point(234, 0);
+
+        if (_addCredits.Visible && !addCreditsWasVisible) _pulseAddCreditsWhenShown = true;
+        if (_useCredits.Visible && !useCreditsWasVisible) _pulseUseCreditsWhenShown = true;
+
+        if (Visible) PulsePendingCreditActions();
+    }
+
+    private void PulsePendingCreditActions()
+    {
+        if (_pulseAddCreditsWhenShown)
+        {
+            _pulseAddCreditsWhenShown = false;
+            _addCredits.PulseAttention();
+        }
+        if (_pulseUseCreditsWhenShown)
+        {
+            _pulseUseCreditsWhenShown = false;
+            _useCredits.PulseAttention();
+        }
     }
 
     private void UpdateCreditPace(UsageSummary usage, CreditSpendRate? rate)
@@ -496,7 +531,9 @@ internal enum HeaderIcon
 internal sealed class HeaderIconButton : Control
 {
     private readonly HeaderIcon _icon;
+    private readonly System.Windows.Forms.Timer _attentionTimer = new() { Interval = 180 };
     private bool _hovered;
+    private int _attentionFrame = -1;
 
     public HeaderIconButton(HeaderIcon icon)
     {
@@ -506,6 +543,23 @@ internal sealed class HeaderIconButton : Control
         SetStyle(ControlStyles.UserPaint | ControlStyles.AllPaintingInWmPaint | ControlStyles.OptimizedDoubleBuffer | ControlStyles.SupportsTransparentBackColor, true);
         BackColor = Color.Transparent;
         TabStop = true;
+        _attentionTimer.Tick += (_, _) =>
+        {
+            _attentionFrame++;
+            if (_attentionFrame >= 16)
+            {
+                _attentionFrame = -1;
+                _attentionTimer.Stop();
+            }
+            Invalidate();
+        };
+    }
+
+    public void PulseAttention()
+    {
+        _attentionFrame = 0;
+        _attentionTimer.Start();
+        Invalidate();
     }
 
     protected override void OnMouseEnter(EventArgs eventArgs)
@@ -529,6 +583,12 @@ internal sealed class HeaderIconButton : Control
         {
             using var hover = new SolidBrush(Color.FromArgb(38, 64, 95));
             eventArgs.Graphics.FillEllipse(hover, 2, 0, 32, 32);
+        }
+        if (_attentionFrame >= 0)
+        {
+            var alpha = _attentionFrame % 2 == 0 ? 112 : 44;
+            using var attention = new SolidBrush(Color.FromArgb(alpha, 87, 184, 240));
+            eventArgs.Graphics.FillEllipse(attention, 0, 0, 36, 32);
         }
 
         using var pen = new Pen(Color.FromArgb(197, 220, 252), 2.1f) { StartCap = LineCap.Round, EndCap = LineCap.Round, LineJoin = LineJoin.Round };
