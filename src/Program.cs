@@ -393,6 +393,11 @@ internal static class Program
         preview.ShowPreviewUsage(CreatePreviewUsage(balance, weekPercent));
         preview.Show();
         Application.DoEvents();
+        preview.PulseVisibleCreditActions();
+        // The credit cues intentionally begin after the window settles. Wait
+        // until their first visible frame before capturing the release image.
+        Thread.Sleep(800);
+        Application.DoEvents();
         // Capture the client area directly. This avoids non-client title-bar
         // clipping that DrawToBitmap can produce at scaled Windows DPI.
         using var image = new Bitmap(preview.ClientSize.Width, preview.ClientSize.Height);
