@@ -56,6 +56,9 @@ internal static class Program
         }
         if (commandLine.Contains("--render-credit-actions", StringComparer.OrdinalIgnoreCase))
         {
+            // The public release image is deliberately English, independent of
+            // the Windows display language or a user's saved app preference.
+            Ui.SetLanguage("en");
             RenderDashboardPreview(34m, 100d);
             return;
         }
@@ -383,12 +386,17 @@ internal static class Program
     private static void RenderDashboardPreview(decimal balance, double weekPercent)
     {
         using var preview = new DashboardForm();
+        // A borderless surface makes this an exact dashboard capture rather
+        // than a DPI-dependent mix of client area and Windows title bar.
+        preview.FormBorderStyle = FormBorderStyle.None;
         preview.SetAutoRecharge(125, 250);
         preview.ShowPreviewUsage(CreatePreviewUsage(balance, weekPercent));
         preview.Show();
         Application.DoEvents();
-        using var image = new Bitmap(preview.Width, preview.Height);
-        preview.DrawToBitmap(image, new Rectangle(Point.Empty, preview.Size));
+        // Capture the client area directly. This avoids non-client title-bar
+        // clipping that DrawToBitmap can produce at scaled Windows DPI.
+        using var image = new Bitmap(preview.ClientSize.Width, preview.ClientSize.Height);
+        preview.DrawToBitmap(image, new Rectangle(Point.Empty, preview.ClientSize));
         image.Save(Path.Combine(AppContext.BaseDirectory, "dashboard-preview.png"));
     }
 
