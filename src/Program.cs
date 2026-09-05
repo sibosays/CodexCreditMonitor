@@ -36,6 +36,26 @@ internal static class Program
     {
         ApplicationConfiguration.Initialize();
         var commandLine = Environment.GetCommandLineArgs();
+        if (commandLine.Contains("--preview-low-credits", StringComparer.OrdinalIgnoreCase))
+        {
+            RunDashboardPreview(50m, 68d);
+            return;
+        }
+        if (commandLine.Contains("--preview-use-credits", StringComparer.OrdinalIgnoreCase))
+        {
+            RunDashboardPreview(80m, 100d);
+            return;
+        }
+        if (commandLine.Contains("--preview-credit-actions", StringComparer.OrdinalIgnoreCase))
+        {
+            RunDashboardPreview(34m, 100d);
+            return;
+        }
+        if (commandLine.Contains("--render-credit-actions", StringComparer.OrdinalIgnoreCase))
+        {
+            RenderDashboardPreview(34m, 100d);
+            return;
+        }
         if (commandLine.Contains("--preview-info", StringComparer.OrdinalIgnoreCase))
         {
             using var preview = new RefreshToast("Saldo bijgewerkt · 245 credits", true, 8_000);
@@ -331,6 +351,53 @@ internal static class Program
             calm?.AlertLevel != CreditSpendAlertLevel.None ||
             afterTopUp?.AlertLevel != CreditSpendAlertLevel.Rapid)
             throw new InvalidOperationException("Credit pace detection verification failed.");
+    }
+
+    private static void RunDashboardPreview(decimal balance, double weekPercent)
+    {
+        var now = DateTimeOffset.Now;
+        using var preview = new DashboardForm();
+        preview.SetAutoRecharge(125, 250);
+        preview.ShowPreviewUsage(new UsageSummary(
+            true,
+            balance,
+            42d,
+            weekPercent,
+            now,
+            128,
+            1_248_730,
+            [new SessionUsage("preview", "gpt-5.6-sol", now.AddMinutes(-8), 6, 82_400)],
+            [new CreditBalanceSample(now.AddMinutes(-30), balance + 4m), new CreditBalanceSample(now, balance)],
+            null));
+        Application.Run(preview);
+    }
+
+    private static void RenderDashboardPreview(decimal balance, double weekPercent)
+    {
+        using var preview = new DashboardForm();
+        preview.SetAutoRecharge(125, 250);
+        preview.ShowPreviewUsage(CreatePreviewUsage(balance, weekPercent));
+        preview.Show();
+        Application.DoEvents();
+        using var image = new Bitmap(preview.Width, preview.Height);
+        preview.DrawToBitmap(image, new Rectangle(Point.Empty, preview.Size));
+        image.Save(Path.Combine(AppContext.BaseDirectory, "dashboard-preview.png"));
+    }
+
+    private static UsageSummary CreatePreviewUsage(decimal balance, double weekPercent)
+    {
+        var now = DateTimeOffset.Now;
+        return new UsageSummary(
+            true,
+            balance,
+            42d,
+            weekPercent,
+            now,
+            128,
+            1_248_730,
+            [new SessionUsage("preview", "gpt-5.6-sol", now.AddMinutes(-8), 6, 82_400)],
+            [new CreditBalanceSample(now.AddMinutes(-30), balance + 4m), new CreditBalanceSample(now, balance)],
+            null);
     }
 
     private static Icon CreateAppIcon()

@@ -5,6 +5,7 @@ namespace CodexCreditMonitor;
 
 internal sealed class DashboardForm : Form
 {
+    private const decimal AddCreditsThreshold = 50m;
     private readonly Label _balance = NewLabel(27, FontStyle.Bold, Color.White);
     private readonly Panel _autoRechargeBadge = new() { BackColor = Color.Transparent, Visible = false };
     private readonly Label _balanceNote = NewLabel(9, FontStyle.Bold, Color.FromArgb(191, 231, 245));
@@ -23,6 +24,9 @@ internal sealed class DashboardForm : Form
     private readonly System.Windows.Forms.Timer _bannerTimer = new() { Interval = 5_000 };
     private readonly Panel _refreshBanner = new() { Height = 24, BackColor = Color.Transparent, Visible = false };
     private readonly Label _refreshBannerText = NewLabel(9, FontStyle.Bold, Color.FromArgb(220, 238, 255));
+    private readonly ToolTip _headerToolTip = new();
+    private readonly HeaderIconButton _addCredits;
+    private readonly HeaderIconButton _useCredits;
     private double? _lastWarnedPercent;
     private decimal? _lastWarnedCreditThreshold;
     private CreditSpendAlertLevel _lastCreditSpendAlertLevel;
@@ -76,23 +80,21 @@ internal sealed class DashboardForm : Form
         settings.Click += (_, _) => SettingsRequested?.Invoke();
         var info = new HeaderIconButton(HeaderIcon.Info) { Location = new Point(278, 0), Anchor = AnchorStyles.Top | AnchorStyles.Right, AccessibleName = Ui.T("Info", "About") };
         info.Click += (_, _) => InfoRequested?.Invoke();
-        var useCredits = new HeaderIconButton(HeaderIcon.UseCredits) { Location = new Point(234, 0), Anchor = AnchorStyles.Top | AnchorStyles.Right, AccessibleName = Ui.T("Credits gebruiken", "Use credits") };
-        useCredits.Click += (_, _) => UseCreditsRequested?.Invoke();
-        var addCredits = new HeaderIconButton(HeaderIcon.AddCredits) { Location = new Point(190, 0), Anchor = AnchorStyles.Top | AnchorStyles.Right, AccessibleName = Ui.T("Credits toevoegen", "Add credits") };
-        addCredits.Click += (_, _) => AddCreditsRequested?.Invoke();
-        var settingsTooltip = new ToolTip();
-        settingsTooltip.SetToolTip(addCredits, Ui.T("Credits toevoegen — open Usage & Billing in ChatGPT", "Add credits — open Usage & Billing in ChatGPT"));
-        settingsTooltip.SetToolTip(useCredits, Ui.T("Credits gebruiken — beheer extra Codex-gebruik in ChatGPT", "Use credits — manage extra Codex usage in ChatGPT"));
-        settingsTooltip.SetToolTip(info, Ui.T("Info", "About"));
-        settingsTooltip.SetToolTip(settings, Ui.T("Instellingen", "Settings"));
-        settingsTooltip.SetToolTip(refresh, Ui.T("Nu vernieuwen", "Refresh now"));
+        _useCredits = new HeaderIconButton(HeaderIcon.UseCredits) { Location = new Point(234, 0), Anchor = AnchorStyles.Top | AnchorStyles.Right, Visible = false };
+        _useCredits.Click += (_, _) => UseCreditsRequested?.Invoke();
+        _addCredits = new HeaderIconButton(HeaderIcon.AddCredits) { Location = new Point(190, 0), Anchor = AnchorStyles.Top | AnchorStyles.Right, Visible = false };
+        _addCredits.Click += (_, _) => AddCreditsRequested?.Invoke();
+        UpdateCreditActionText();
+        _headerToolTip.SetToolTip(info, Ui.T("Info", "About"));
+        _headerToolTip.SetToolTip(settings, Ui.T("Instellingen", "Settings"));
+        _headerToolTip.SetToolTip(refresh, Ui.T("Nu vernieuwen", "Refresh now"));
         _refreshBanner.Location = new Point(0, 52);
         _refreshBanner.Width = 262;
         _refreshBanner.Padding = new Padding(9, 3, 8, 2);
         _refreshBannerText.Dock = DockStyle.Fill;
         _refreshBannerText.TextAlign = ContentAlignment.MiddleLeft;
         _refreshBanner.Controls.Add(_refreshBannerText);
-        header.Controls.AddRange([title, _updated, addCredits, useCredits, info, settings, refresh, _refreshBanner]);
+        header.Controls.AddRange([title, _updated, _addCredits, _useCredits, info, settings, refresh, _refreshBanner]);
 
         var balanceCard = Card(154);
         var balanceCaption = NewLabel(11, FontStyle.Regular, Color.FromArgb(168, 185, 205));
@@ -199,6 +201,12 @@ internal sealed class DashboardForm : Form
         _refreshTimer.Interval = Math.Clamp(minutes, 1, 5) * 60_000;
     }
 
+    internal void ShowPreviewUsage(UsageSummary usage)
+    {
+        _refreshTimer.Stop();
+        ApplyUsage(usage);
+    }
+
     private void OnLanguageChanged()
     {
         if (IsDisposed) return;
@@ -211,6 +219,7 @@ internal sealed class DashboardForm : Form
         UpdateMetricCard("tokenCard", Ui.S("Dashboard.Today"), Ui.S("Dashboard.ProcessedTokens"));
         _fiveHour.SetLabel(Ui.S("Dashboard.CurrentWindow"));
         _week.SetLabel(Ui.S("Dashboard.WeeklyUsage"));
+        UpdateCreditActionText();
         // This label is not derived from a usage read, so translate it explicitly
         // instead of waiting for the next dashboard refresh.
         UpdateBalanceNote();
@@ -296,6 +305,7 @@ internal sealed class DashboardForm : Form
         _week.SetValue(usage.WeekPercent);
         _todayRequests.Text = usage.TodayRequests.ToString("N0");
         _todayTokens.Text = FormatTokens(usage.TodayTokens);
+        UpdateCreditActionVisibility(usage);
         UpdateSessions(usage.RecentSessions);
         ShowWarningIfNeeded(usage);
         ShowLowCreditWarningIfNeeded(usage);
@@ -308,6 +318,26 @@ internal sealed class DashboardForm : Form
     {
         _autoRechargeBadge.Visible = true;
         _balanceNote.Text = $"{Ui.S("Dashboard.AutoRecharge")} · {_autoRechargeThreshold} → {_autoRechargeTarget} CREDITS";
+    }
+
+    private void UpdateCreditActionText()
+    {
+        _addCredits.AccessibleName = Ui.T("Credits toevoegen", "Add credits");
+        _useCredits.AccessibleName = Ui.T("Credits gebruiken", "Use credits");
+        _headerToolTip.SetToolTip(_addCredits, Ui.T(
+            "Credits toevoegen\nOpen Usage & Billing in ChatGPT om je tegoed aan te vullen.",
+            "Add credits\nOpen Usage & Billing in ChatGPT to top up your balance."));
+        _headerToolTip.SetToolTip(_useCredits, Ui.T(
+            "Credits gebruiken\nJe inbegrepen bundel is opgebruikt. Open Usage & Billing in ChatGPT voor extra Codex-gebruik.",
+            "Use credits\nYour included allowance is exhausted. Open Usage & Billing in ChatGPT for additional Codex usage."));
+    }
+
+    private void UpdateCreditActionVisibility(UsageSummary usage)
+    {
+        _addCredits.Visible = usage.CreditBalance is decimal balance && balance <= AddCreditsThreshold;
+        // The portal itself is not inspected. A fully used included allowance plus a positive
+        // local balance is the reliable local signal that credit-backed usage is relevant.
+        _useCredits.Visible = usage.CreditBalance is decimal available && available > 0m && usage.WeekPercent is >= 100d;
     }
 
     private void UpdateCreditPace(UsageSummary usage, CreditSpendRate? rate)
@@ -520,10 +550,10 @@ internal sealed class HeaderIconButton : Control
 
         if (_icon == HeaderIcon.UseCredits)
         {
-            eventArgs.Graphics.DrawEllipse(pen, 8, 6, 20, 20);
-            eventArgs.Graphics.DrawLine(pen, 12, 16, 23, 16);
+            eventArgs.Graphics.DrawRectangle(pen, 8, 7, 20, 17);
+            eventArgs.Graphics.DrawLine(pen, 9, 12, 27, 12);
             using var fill = new SolidBrush(Color.FromArgb(197, 220, 252));
-            eventArgs.Graphics.FillPolygon(fill, [new Point(24, 16), new Point(19, 11), new Point(19, 21)]);
+            eventArgs.Graphics.FillPolygon(fill, [new Point(19, 13), new Point(14, 19), new Point(18, 19), new Point(16, 24), new Point(23, 16), new Point(19, 16)]);
             return;
         }
 

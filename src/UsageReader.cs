@@ -128,7 +128,7 @@ internal static class UsageReader
                 // represents the balance and 5-hour/week allowances shown by this monitor.
                 // For example, a later "premium" scope has no windows and a placeholder
                 // zero balance; accepting it would erase the valid Codex values.
-                if (payload.TryGetProperty("rate_limits", out var limits) && IsCodexLimit(limits))
+                if (TryGetCodexLimits(payload, out var limits))
                 {
                     var balance = GetDecimalPath(limits, "credits", "balance");
                     if (balance is decimal value)
@@ -201,6 +201,35 @@ internal static class UsageReader
     private static double? GetDoublePath(JsonElement element, string parent, string property)
         => element.ValueKind == JsonValueKind.Object && element.TryGetProperty(parent, out var child) &&
            child.ValueKind == JsonValueKind.Object && child.TryGetProperty(property, out var value) && value.TryGetDouble(out var result) ? result : null;
+
+    // Codex has used both a single `rate_limits` object and a per-limit map.
+    // Keep the monitor compatible with either local log shape, without guessing
+    // values from a non-Codex scope such as "premium".
+    private static bool TryGetCodexLimits(JsonElement payload, out JsonElement limits)
+    {
+        limits = default;
+        if (payload.ValueKind != JsonValueKind.Object) return false;
+
+        if (payload.TryGetProperty("rate_limits", out var direct) && IsCodexLimit(direct))
+        {
+            limits = direct;
+            return true;
+        }
+
+        foreach (var mapName in new[] { "rate_limits_by_limit_id", "rateLimitsByLimitId" })
+        {
+            if (payload.TryGetProperty(mapName, out var map) &&
+                map.ValueKind == JsonValueKind.Object &&
+                map.TryGetProperty("codex", out var codex) &&
+                codex.ValueKind == JsonValueKind.Object)
+            {
+                limits = codex;
+                return true;
+            }
+        }
+
+        return false;
+    }
 
     private static bool IsCodexLimit(JsonElement limits)
         => limits.ValueKind == JsonValueKind.Object &&

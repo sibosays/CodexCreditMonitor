@@ -3,8 +3,11 @@
 
 ## Nieuw in 2.1
 
-- Twee compacte dashboardacties maken creditbeheer direct bereikbaar: **Credits toevoegen** en **Credits gebruiken**. De plus- en gebruikspictogrammen staan naast de bestaande headeracties en hebben elk een duidelijke tooltip.
+- **Credits toevoegen** verschijnt alleen bij een saldo van 50 credits of lager. De plusactie opent Usage & Billing in ChatGPT.
+- **Credits gebruiken** verschijnt alleen wanneer de inbegrepen weekbundel op is én lokaal positief credittegoed beschikbaar is. Het creditkaartje met bliksem opent Usage & Billing voor extra Codex-gebruik.
+- Beide acties hebben tweetalige, meerregelige tooltips. Gebruik `--preview-low-credits`, `--preview-use-credits` of `--preview-credit-actions` om de drie staten lokaal te bekijken.
 - Beide acties openen **Usage & Billing** in ChatGPT. De monitor koopt geen credits en wijzigt geen instelling zelfstandig.
+- Herstelt het vaste Windows-appicoon in de v2.1-uitvoer. De actuele verbruiksuitlezer accepteert zowel de klassieke als de nieuwe per-limietstructuur uit lokale Codex-logs, zodat saldo en beide verbruiksvensters ook in de vernieuwde toast blijven staan.
 
 ## Functionele beschrijving
 
@@ -28,8 +31,11 @@ Het dashboard open je vanuit het systeemvak. Instellingen, handmatig vernieuwen 
 
 ## New in 2.1
 
-- Two compact dashboard actions make credit management directly available: **Add credits** and **Use credits**. The plus and usage icons sit alongside the existing header actions and each have a clear tooltip.
+- **Add credits** appears only at a balance of 50 credits or below. The plus action opens Usage & Billing in ChatGPT.
+- **Use credits** appears only when the included weekly allowance is exhausted and a positive local credit balance is available. The credit-card-with-lightning action opens Usage & Billing for additional Codex usage.
+- Both actions have bilingual, multiline tooltips. Use `--preview-low-credits`, `--preview-use-credits`, or `--preview-credit-actions` to view the three states locally.
 - Both actions open **Usage & Billing** in ChatGPT. The monitor never purchases credits or changes a setting on its own.
+- Restores the fixed Windows application icon in the v2.1 output. The usage reader accepts both the classic and the new per-limit structure in local Codex logs, keeping the balance and both usage windows in the refreshed toast.
 
 ## Functional overview
 

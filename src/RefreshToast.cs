@@ -42,6 +42,8 @@ internal sealed class RefreshToast : Form
         updated.TextAlign = ContentAlignment.MiddleRight;
         var balanceCaption = NewLabel(Ui.T("BESCHIKBAAR", "AVAILABLE"), 9, FontStyle.Regular, Color.FromArgb(166, 185, 207));
         balanceCaption.Location = new Point(14, 42);
+        var hasUsageData = usage.HasData &&
+                           (usage.CreditBalance is not null || usage.FiveHourPercent is not null || usage.WeekPercent is not null);
         var balance = NewLabel(usage.CreditBalance is decimal credits ? $"{credits:N1} credits" : Ui.T("Nog niet beschikbaar", "Not available yet"), 19, FontStyle.Bold, Color.White);
         balance.Location = new Point(13, 55);
 
@@ -51,7 +53,9 @@ internal sealed class RefreshToast : Form
         var fiveHour = FixedLabel(Percent(usage.FiveHourPercent), 10, FontStyle.Bold, Color.FromArgb(228, 237, 248), new Point(14, 120), new Size(136, 19));
         var weekCaption = FixedLabel(Ui.T("WEEKVERBRUIK", "WEEKLY USAGE"), 8, FontStyle.Regular, Color.FromArgb(151, 174, 201), new Point(172, 104), new Size(134, 16));
         var week = FixedLabel(Percent(usage.WeekPercent), 10, FontStyle.Bold, Color.FromArgb(228, 237, 248), new Point(172, 120), new Size(134, 19));
-        var today = FixedLabel($"{Ui.T("Vandaag", "Today")} · {usage.TodayRequests:N0} {Ui.T("momenten", "events")} · {Tokens(usage.TodayTokens)}", 8.5f, FontStyle.Regular, Color.FromArgb(157, 181, 210), new Point(14, 149), new Size(292, 16));
+        var today = FixedLabel(hasUsageData
+            ? $"{Ui.T("Vandaag", "Today")} · {usage.TodayRequests:N0} {Ui.T("momenten", "events")} · {Tokens(usage.TodayTokens)}"
+            : Ui.T("Nog geen actuele Codex-verbruiksgegevens gevonden.", "No current Codex usage data found."), 8.5f, FontStyle.Regular, Color.FromArgb(157, 181, 210), new Point(14, 149), new Size(292, 16));
         today.AutoEllipsis = true;
 
         Controls.AddRange([title, updated, balanceCaption, balance, line, divider, fiveCaption, fiveHour, weekCaption, week, today]);
