@@ -125,6 +125,9 @@ internal static class Program
         }
 
         using var dashboard = new DashboardForm();
+        // The tray activation listener can receive a signal before the dashboard is shown.
+        // Force a handle now so its UI callback always has a safe target.
+        _ = dashboard.Handle;
         using var applicationContext = new ApplicationContext();
         using var showDashboardSignal = new EventWaitHandle(false, EventResetMode.AutoReset, "Local\\CodexCreditMonitor.ShowDashboard");
         var allowClose = false;
