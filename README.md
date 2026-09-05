@@ -2,27 +2,29 @@
 
 **A portable Windows system-tray companion for understanding local Codex usage at a glance.**
 
+Created and maintained by C.S.K. (Simon) Bouwens.
+
 Codex Credit Monitor turns local Codex session records into a clear dashboard for credit balance, rate-limit windows, model activity, and recent sessions. It runs quietly in the Windows system tray and never changes your ChatGPT or Codex account.
 
 > This is an independent community utility. It is not an official OpenAI product and is not an official billing meter.
 
 ## At a glance
 
-![Codex Credit Monitor dashboard showing both contextual credit actions in their attention state.](assets/dashboard-credit-actions-pulse.png)
+![Codex Credit Monitor v2.1.1 dashboard with balanced card margins.](assets/dashboard-v2.1.1.png)
 
-*The v2.1 dashboard shows both contextual credit actions in their attention state.*
+*The v2.1.1 dashboard uses a consistent card grid with equal outer margins.*
 
 ## Download
 
 Download the current portable package directly from this repository:
 
-**[Download Codex Credit Monitor Portable v2.1 (ZIP)](https://github.com/sibosays/CodexCreditMonitor/raw/refs/heads/main/downloads/CodexCreditMonitorPortable_2.1.zip)**
+**[Download Codex Credit Monitor Portable v2.1.1 (ZIP)](https://github.com/sibosays/CodexCreditMonitor/raw/refs/heads/main/downloads/CodexCreditMonitorPortable_2.1.1.zip)**
 
 The repository deliberately contains product information only. The application source code is not published here.
 
 ## Install and start
 
-1. Download `CodexCreditMonitorPortable_2.1.zip` using the link above.
+1. Download `CodexCreditMonitorPortable_2.1.1.zip` using the link above.
 2. Right-click the ZIP file and choose **Extract All**.
 3. Open the extracted `CodexCreditMonitorPortable` folder.
 4. Run `CodexCreditMonitorPortable.exe`.
@@ -48,3 +50,7 @@ Codex Credit Monitor reads the signed-in Windows user's local Codex session reco
 ## Feedback
 
 For a problem or improvement idea, please open a GitHub issue with your Windows version, app version, and steps to reproduce the behaviour.
+
+## Copyright
+
+Copyright © 2026 C.S.K. (Simon) Bouwens. All rights reserved.
