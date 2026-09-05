@@ -75,7 +75,7 @@ internal sealed class DashboardForm : Form
         var header = new Panel { Width = 402, Height = 101, Margin = Padding.Empty, BackColor = Color.Transparent };
         // Five compact header actions leave 190 logical pixels for the product name.
         // Keep the full title visible instead of letting it run beneath an action.
-        var title = NewLabel(13, FontStyle.Bold, Color.White);
+        var title = NewLabel(12, FontStyle.Bold, Color.White);
         title.Text = "Codex Credit Monitor";
         title.Location = new Point(0, 0);
         title.AutoSize = true;
@@ -88,9 +88,9 @@ internal sealed class DashboardForm : Form
         settings.Click += (_, _) => SettingsRequested?.Invoke();
         var info = new HeaderIconButton(HeaderIcon.Info) { Location = new Point(278, 0), Anchor = AnchorStyles.Top | AnchorStyles.Right, AccessibleName = Ui.T("Info", "About") };
         info.Click += (_, _) => InfoRequested?.Invoke();
-        _useCredits = new HeaderIconButton(HeaderIcon.UseCredits) { Location = new Point(234, 0), Anchor = AnchorStyles.Top | AnchorStyles.Right, Visible = false };
+        _useCredits = new HeaderIconButton(HeaderIcon.UseCredits) { Location = new Point(234, 0), Anchor = AnchorStyles.Top, Visible = false };
         _useCredits.Click += (_, _) => UseCreditsRequested?.Invoke();
-        _addCredits = new HeaderIconButton(HeaderIcon.AddCredits) { Location = new Point(190, 0), Anchor = AnchorStyles.Top | AnchorStyles.Right, Visible = false };
+        _addCredits = new HeaderIconButton(HeaderIcon.AddCredits) { Location = new Point(190, 0), Anchor = AnchorStyles.Top, Visible = false };
         _addCredits.Click += (_, _) => AddCreditsRequested?.Invoke();
         UpdateCreditActionText();
         VisibleChanged += (_, _) =>
@@ -362,14 +362,16 @@ internal sealed class DashboardForm : Form
     {
         var addCreditsWasVisible = _addCredits.Visible;
         var useCreditsWasVisible = _useCredits.Visible;
-        _addCredits.Visible = usage.CreditBalance is decimal balance && balance <= AddCreditsThreshold;
+        var showAddCredits = usage.CreditBalance is decimal balance && balance <= AddCreditsThreshold;
         // The portal itself is not inspected. A fully used included allowance plus a positive
         // local balance is the reliable local signal that credit-backed usage is relevant.
-        _useCredits.Visible = usage.CreditBalance is decimal available && available > 0m && usage.WeekPercent is >= 100d;
+        var showUseCredits = usage.CreditBalance is decimal available && available > 0m && usage.WeekPercent is >= 100d;
+        _addCredits.Visible = showAddCredits;
+        _useCredits.Visible = showUseCredits;
 
         // Keep a single conditional action connected to the fixed header actions.
         // When both actions are present, they use the two reserved slots in order.
-        _addCredits.Location = new Point(_useCredits.Visible ? 190 : 234, 0);
+        _addCredits.Location = new Point(showUseCredits ? 190 : 234, 0);
         _useCredits.Location = new Point(234, 0);
 
         if (_addCredits.Visible && !addCreditsWasVisible) _pulseAddCreditsWhenShown = true;
@@ -578,6 +580,7 @@ internal sealed class HeaderIconButton : Control
         _attentionFrame = -1;
         Invalidate();
     }
+
 
     protected override void OnMouseEnter(EventArgs eventArgs)
     {
