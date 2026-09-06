@@ -1,0 +1,14 @@
+name: Enrich v2.2 release description
+on:
+  push:
+    tags: ["v2.2"]
+permissions:
+  contents: write
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release edit v2.2 --notes-file .github/release-notes-v2.2.md
