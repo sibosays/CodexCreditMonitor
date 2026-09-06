@@ -7,6 +7,9 @@ namespace CodexCreditMonitor;
 internal static class Program
 {
     private const string AppTitle = "Codex Credit Monitor";
+    // Give Explorer a stable identity before any window is created. Without
+    // this, taskbar grouping can retain a generic icon for the native host.
+    private const string AppUserModelId = "com.cskbouwens.CodexCreditMonitor";
     // ChatGPT owns purchasing and flexible-credit settings; this monitor only provides a shortcut.
     private const string CreditSettingsUrl = "https://chatgpt.com/#settings/Usage";
     internal static readonly Icon AppIcon = CreateAppIcon();
@@ -35,6 +38,7 @@ internal static class Program
     private static void Main()
     {
         ApplicationConfiguration.Initialize();
+        SetTaskbarIdentity();
         var commandLine = Environment.GetCommandLineArgs();
         var showDashboardOnLaunch = commandLine.Contains("--show-dashboard", StringComparer.OrdinalIgnoreCase);
         UsageSummary? previewUsage = null;
@@ -357,6 +361,18 @@ internal static class Program
         shortcut.Save();
     }
 
+    private static void SetTaskbarIdentity()
+    {
+        try
+        {
+            _ = SetCurrentProcessExplicitAppUserModelID(AppUserModelId);
+        }
+        catch (EntryPointNotFoundException)
+        {
+            // Older Windows installations simply use the executable icon.
+        }
+    }
+
     private static void VerifyCreditPaceDetection()
     {
         var now = DateTimeOffset.UtcNow;
@@ -474,4 +490,7 @@ internal static class Program
     [DllImport("user32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool DestroyIcon(IntPtr iconHandle);
+
+    [DllImport("shell32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    private static extern int SetCurrentProcessExplicitAppUserModelID(string appID);
 }
