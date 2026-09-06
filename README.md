@@ -2,6 +2,8 @@
 
 A lightweight Windows system-tray monitor for local Codex usage.
 
+![Codex Credit Monitor v2.2 dashboard](assets/dashboard-v2.2.png)
+
 ## v2.2
 
 - Shows the real 5-hour reset time and remaining allowance in the dashboard status area.
