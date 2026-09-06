@@ -25,16 +25,9 @@ No account credentials are requested. No usage data is uploaded, and the applica
 
 ## Dashboard
 
-The dashboard combines four types of information without crowding the layout:
-
-- **Credits** — available balance, automatic-recharge context, and locally observed credit-use pace.
-- **Allowances** — current 5-hour and weekly usage, including the real 5-hour reset countdown.
-- **Today** — model events and processed tokens for the current day.
-- **Sessions** — the most recent local Codex sessions and their activity.
+The dashboard combines credits, allowances, today's activity, recent sessions, and locally observed credit-use pace without crowding the layout.
 
 ## Contextual credit actions
-
-Two compact actions appear only when they are useful:
 
 - **Add credits** appears when the available balance is 50 credits or lower.
 - **Use credits** appears when the included weekly allowance is exhausted and a positive credit balance is available.
@@ -43,41 +36,44 @@ Both actions open ChatGPT Usage & Billing. Codex Credit Monitor never purchases 
 
 ## Alerts
 
-Optional local notifications help prevent surprises:
+Optional local notifications cover 75% and 90% 5-hour-window usage, low credit balances, and unusually rapid credit use. Notifications use the same usage and balance values shown on the dashboard.
 
-- A usage warning at 75% of the current 5-hour window.
-- A stronger warning at 90%.
-- Low-credit warnings at the configured critical levels.
-- A rapid-use warning when local credit consumption accelerates unusually quickly.
+## PortableApps.com Platform support
 
-Notifications use the same usage and balance values shown on the dashboard.
+Codex Credit Monitor v2.2 is a portable application that has been tested successfully inside the PortableApps.com Platform.
 
-## Settings and system-tray controls
+For PortableApps users this means:
 
-From the system tray you can open the dashboard, refresh immediately, change settings, view product information, or exit the monitor. Settings include language, alert behavior, sound, refresh interval, and — for the standard Windows build — launch at Windows sign-in.
+- Start it from the PortableApps.com menu as **Codex Credit Monitor Portable**.
+- Keep the complete application folder together when moving it between drives or computers.
+- Store application settings inside the package's own Data folder.
+- Run without installing a separate .NET Desktop Runtime.
+- Leave no permanent Windows startup entry when using the portable edition.
 
-The Info window contains the current product description in Dutch or English. It scrolls gently and pauses when you point at the text so it remains easy to read.
+The package follows the PortableApps directory structure and includes its launcher, AppInfo metadata, application icon, and self-contained 64-bit Windows runtime.
+
+## Settings and controls
+
+From the system tray you can open the dashboard, refresh immediately, change settings, view product information, or exit. Settings include language, alerts, sound, refresh interval, and — for the standard Windows build — launch at Windows sign-in.
+
+The Info window contains the current product description in Dutch or English. It scrolls gently and pauses when you point at the text.
 
 ## Download
 
 Download the current package from the [latest release](https://github.com/sibosays/CodexCreditMonitor/releases/latest):
 
-1. Download `CodexCreditMonitorPortable_2.2.zip`.
+1. Download CodexCreditMonitorPortable_2.2.zip.
 2. Extract the complete ZIP archive.
-3. Open the extracted `CodexCreditMonitorPortable` folder.
-4. Run `CodexCreditMonitorPortable.exe`.
-
-The application is a self-contained 64-bit Windows build. A separate .NET Desktop Runtime installation is not required.
-
-The PortableApps edition keeps its settings in its own `Data` folder and deliberately does not offer Windows startup, leaving no persistent startup entry on the host computer.
+3. Open the extracted CodexCreditMonitorPortable folder.
+4. Run CodexCreditMonitorPortable.exe directly or add it to the PortableApps.com Platform.
 
 ## Verify the download
 
-Use the accompanying `SHA256SUMS.txt` file to verify the Portable ZIP before running it. The current release contains only the current application package, its checksum, and the matching dashboard screenshot, in addition to GitHub's automatic source archives.
+Use SHA256SUMS.txt to verify the Portable ZIP. The current release contains the application package, checksum, and matching dashboard screenshot, in addition to GitHub's automatic source archives.
 
 ## Privacy and scope
 
-Codex Credit Monitor reads local Codex session records only and sends no data anywhere. Because it observes local records, cloud tasks, activity on other devices, and delayed account updates may differ from the dashboard until those values are written locally.
+Codex Credit Monitor reads local Codex session records only and sends no data anywhere. Cloud tasks, other devices, and delayed account updates may differ until those values are written locally.
 
 ## What is new in v2.2?
 
