@@ -1,0 +1,53 @@
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <Package Name="Codex Credit Monitor"
+           Manufacturer="C.S.K. (Simon) Bouwens"
+           Version="2.2.0"
+           UpgradeCode="E7BB5DB6-C9E5-41F7-8BF2-A9A2A43D541E"
+           Scope="perMachine">
+    <MajorUpgrade DowngradeErrorMessage="A newer version of Codex Credit Monitor is already installed." />
+    <MediaTemplate EmbedCab="yes" />
+    <Icon Id="AppIcon.ico" SourceFile="..\src\Assets\codex-credit-monitor.ico" />
+    <Property Id="ARPPRODUCTICON" Value="AppIcon.ico" />
+
+    <StandardDirectory Id="ProgramFiles64Folder">
+      <Directory Id="INSTALLFOLDER" Name="Codex Credit Monitor" />
+    </StandardDirectory>
+    <StandardDirectory Id="ProgramMenuFolder">
+      <Directory Id="ApplicationProgramsFolder" Name="Codex Credit Monitor" />
+    </StandardDirectory>
+
+    <Feature Id="MainFeature" Title="Codex Credit Monitor" Level="1">
+      <ComponentGroupRef Id="ApplicationFiles" />
+      <ComponentRef Id="ApplicationShortcut" />
+    </Feature>
+  </Package>
+
+  <Fragment>
+    <ComponentGroup Id="ApplicationFiles" Directory="INSTALLFOLDER">
+      <Files Include="..\src\bin\Release\net9.0-windows\win-x64\publish\**" />
+    </ComponentGroup>
+  </Fragment>
+
+  <Fragment>
+    <DirectoryRef Id="ApplicationProgramsFolder">
+      <Component Id="ApplicationShortcut" Guid="1C293156-442B-48CE-9755-AF8608C07142">
+        <Shortcut Id="StartMenuShortcut"
+                  Name="Codex Credit Monitor"
+                  Description="Local Codex usage and credit monitor"
+                  Target="[INSTALLFOLDER]CodexCreditMonitor.exe"
+                  WorkingDirectory="INSTALLFOLDER"
+                  Icon="AppIcon.ico" />
+        <RemoveFolder Id="RemoveApplicationProgramsFolder" Directory="ApplicationProgramsFolder" On="uninstall" />
+        <RegistryValue Root="HKCU"
+                       Key="Software\C.S.K. (Simon) Bouwens\Codex Credit Monitor"
+                       Name="Installed"
+                       Type="integer"
+                       Value="1"
+                       KeyPath="yes" />
+      </Component>
+    </DirectoryRef>
+  </Fragment>
+</Wix>
+
+
+

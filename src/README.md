@@ -20,6 +20,10 @@ Codex Credit Monitor is een lichte Windows-systeemvakapp voor overzichtelijk lok
 
 De monitor leest lokale Codex-sessies en verstuurt niets. Kies via Instellingen onder meer de taal, waarschuwingen, geluid, verversinterval en — voor de gewone Windows-app — starten met Windows. De PortableApps-editie bewaart instellingen in de eigen pakketmap.
 
+## Beschikbare edities
+
+De Windows Installer (MSI) installeert de gewone 64-bits desktopapp met een Startmenu-snelkoppeling. De PortableApps-editie is succesvol getest binnen het PortableApps.com Platform, bewaart instellingen in de eigen Data-map en vereist geen afzonderlijke .NET Desktop Runtime.
+
 <!-- en -->
 # Codex Credit Monitor
 
@@ -41,3 +45,8 @@ Codex Credit Monitor is a lightweight Windows system-tray application for clear 
 ## Privacy and settings
 
 The monitor reads local Codex sessions and sends nothing anywhere. In Settings, choose the language, alerts, sound, refresh interval, and — for the standard Windows app — launch at sign-in. The PortableApps edition keeps its settings in its own package folder.
+
+## Available editions
+
+The Windows Installer (MSI) installs the standard 64-bit desktop application with a Start menu shortcut. The PortableApps edition has been tested successfully inside the PortableApps.com Platform, keeps settings in its own Data folder, and requires no separate .NET Desktop Runtime.
+

@@ -13,3 +13,7 @@
 
 # Productdocumentatie en pakketten blijven lokaal; de repository volgt alleen broncode.
 /README.md
+
+# MSI-bouwuitvoer
+/installer/bin/
+/installer/obj/
