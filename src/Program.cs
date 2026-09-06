@@ -141,6 +141,7 @@ internal static class Program
         var settings = MonitorSettings.Load();
         _settingsForRestart = settings;
         Ui.SetLanguage(settings.Language);
+        RefreshStartupShortcutIfEnabled();
         if (settings.ReopenDashboardAfterLanguageChange)
         {
             settings.ReopenDashboardAfterLanguageChange = false;
@@ -194,7 +195,7 @@ internal static class Program
             if (MonitorSettings.IsPortableMode) return false;
             try
             {
-                if (enabled && !File.Exists(StartupShortcutPath))
+                if (enabled)
                 {
                     var executable = Environment.ProcessPath;
                     if (string.IsNullOrWhiteSpace(executable)) return false;
@@ -359,6 +360,22 @@ internal static class Program
         shortcut.Description = AppTitle;
         shortcut.IconLocation = $"{executable},0";
         shortcut.Save();
+    }
+
+    private static void RefreshStartupShortcutIfEnabled()
+    {
+        if (MonitorSettings.IsPortableMode || !File.Exists(StartupShortcutPath)) return;
+        var executable = Environment.ProcessPath;
+        if (string.IsNullOrWhiteSpace(executable)) return;
+
+        try
+        {
+            CreateStartupShortcut(executable);
+        }
+        catch
+        {
+            // Monitoring remains available when a corporate policy blocks shortcut writes.
+        }
     }
 
     private static void SetTaskbarIdentity()
