@@ -1,5 +1,12 @@
 <!-- nl -->
-# Codex Credit Monitor 2.1.1
+# Codex Credit Monitor 2.2
+
+## Nieuw in 2.2
+
+- De statuszone van het dashboard toont nu de echte resterende tijd tot de reset van het actuele 5-uursvenster, plus het resterende percentage. Beide waarden komen uit de lokale Codex-limietregistratie.
+- Info toont voortaan uitsluitend de professionele, actuele productbeschrijving uit `README.md`. Wijzigingsgeschiedenis blijft in dit afzonderlijke What's New-bronbestand.
+
+## v2.1.1
 
 ## Nieuw in 2.1.1
 
@@ -37,7 +44,14 @@ Codex Credit Monitor is een lichte Windows-systeemvakapp die je lokale Codex-ses
 Het dashboard open je vanuit het systeemvak. Instellingen, handmatig vernieuwen en afsluiten zijn daar eveneens beschikbaar.
 
 <!-- en -->
-# Codex Credit Monitor 2.1.1
+# Codex Credit Monitor 2.2
+
+## New in 2.2
+
+- The dashboard status area now shows the real time remaining until the current 5-hour window resets, together with the remaining percentage. Both values come from local Codex rate-limit records.
+- Info now shows only the professional, current product description from `README.md`. Change history remains in this separate What's New source file.
+
+## v2.1.1
 
 ## New in 2.1.1
 

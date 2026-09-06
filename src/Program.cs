@@ -234,7 +234,7 @@ internal static class Program
 
         void ShowInfo()
         {
-            var source = Path.Combine(AppContext.BaseDirectory, "WhatsNew.md");
+            var source = Path.Combine(AppContext.BaseDirectory, "README.md");
             var message = File.Exists(source)
                 ? Ui.SelectInfo(File.ReadAllText(source))
                 : Ui.T("Codex Credit Monitor\n\nInformatie is niet beschikbaar.", "Codex Credit Monitor\n\nInformation is unavailable.");
@@ -445,6 +445,7 @@ internal static class Program
             true,
             balance,
             42d,
+            now.AddHours(3).AddMinutes(48),
             weekPercent,
             now,
             128,

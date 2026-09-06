@@ -15,6 +15,7 @@ internal sealed class DashboardForm : Form
     private readonly Panel _creditPaceBadge = new() { BackColor = Color.Transparent, Visible = false };
     private readonly Label _creditPaceNote = NewLabel(9, FontStyle.Bold, Color.FromArgb(235, 204, 136));
     private readonly Label _updated = NewLabel(10, FontStyle.Regular, Color.FromArgb(155, 172, 194));
+    private readonly Label _fiveHourReset = NewLabel(9, FontStyle.Regular, Color.FromArgb(177, 198, 223));
     private readonly UsageBar _fiveHour = new(Ui.S("Dashboard.CurrentWindow"));
     private readonly UsageBar _week = new(Ui.S("Dashboard.WeeklyUsage"));
     private readonly Label _todayRequests = NewLabel(17, FontStyle.Bold, Color.White);
@@ -85,6 +86,11 @@ internal sealed class DashboardForm : Form
         _updated.Text = Ui.S("Dashboard.LocalTracking");
         _updated.Location = new Point(1, 36);
         _updated.AutoSize = true;
+        // The header deliberately reserves its lower half for live status details.
+        // This keeps the existing cards perfectly stationary while making the
+        // reset state easy to scan below the ordinary update status.
+        _fiveHourReset.Location = new Point(1, 64);
+        _fiveHourReset.AutoSize = true;
         var refresh = new HeaderIconButton(HeaderIcon.Refresh) { Location = new Point(366, 0), Anchor = AnchorStyles.Top | AnchorStyles.Right, AccessibleName = Ui.T("Vernieuwen", "Refresh") };
         refresh.Click += (_, _) => RefreshUsage();
         var settings = new HeaderIconButton(HeaderIcon.Settings) { Location = new Point(322, 0), Anchor = AnchorStyles.Top | AnchorStyles.Right, AccessibleName = Ui.T("Instellingen", "Settings") };
@@ -109,7 +115,7 @@ internal sealed class DashboardForm : Form
         _refreshBannerText.Dock = DockStyle.Fill;
         _refreshBannerText.TextAlign = ContentAlignment.MiddleLeft;
         _refreshBanner.Controls.Add(_refreshBannerText);
-        header.Controls.AddRange([title, _updated, _addCredits, _useCredits, info, settings, refresh, _refreshBanner]);
+        header.Controls.AddRange([title, _updated, _fiveHourReset, _addCredits, _useCredits, info, settings, refresh, _refreshBanner]);
 
         var balanceCard = Card(154);
         var balanceCaption = NewLabel(11, FontStyle.Regular, Color.FromArgb(168, 185, 205));
@@ -169,7 +175,11 @@ internal sealed class DashboardForm : Form
             _fileChangeDebounce.Stop();
             RefreshUsage();
         };
-        _bannerTimer.Tick += (_, _) => _refreshBanner.Visible = false;
+        _bannerTimer.Tick += (_, _) =>
+        {
+            _refreshBanner.Visible = false;
+            UpdateFiveHourReset(LatestUsage);
+        };
         _refreshTimer.Start();
         Ui.LanguageChanged += OnLanguageChanged;
     }
@@ -248,6 +258,7 @@ internal sealed class DashboardForm : Form
         UpdateMetricCard("tokenCard", Ui.S("Dashboard.Today"), Ui.S("Dashboard.ProcessedTokens"));
         _fiveHour.SetLabel(Ui.S("Dashboard.CurrentWindow"));
         _week.SetLabel(Ui.S("Dashboard.WeeklyUsage"));
+        UpdateFiveHourReset(LatestUsage);
         UpdateCreditActionText();
         // This label is not derived from a usage read, so translate it explicitly
         // instead of waiting for the next dashboard refresh.
@@ -278,6 +289,7 @@ internal sealed class DashboardForm : Form
         _refreshBannerText.ForeColor = foreground;
         _refreshBannerText.Text = message;
         _refreshBanner.Visible = true;
+        _fiveHourReset.Visible = false;
         if (hideAfter) _bannerTimer.Start();
     }
 
@@ -332,6 +344,7 @@ internal sealed class DashboardForm : Form
             : usage.Error ?? Ui.S("Dashboard.NoData");
         _fiveHour.SetValue(usage.FiveHourPercent);
         _week.SetValue(usage.WeekPercent);
+        UpdateFiveHourReset(usage);
         _todayRequests.Text = usage.TodayRequests.ToString("N0");
         _todayTokens.Text = FormatTokens(usage.TodayTokens);
         UpdateCreditActionVisibility(usage);
@@ -347,6 +360,29 @@ internal sealed class DashboardForm : Form
     {
         _autoRechargeBadge.Visible = true;
         _balanceNote.Text = $"{Ui.S("Dashboard.AutoRecharge")} · {_autoRechargeThreshold} → {_autoRechargeTarget} CREDITS";
+    }
+
+    private void UpdateFiveHourReset(UsageSummary? usage)
+    {
+        if (usage?.FiveHourResetsAt is not DateTimeOffset resetsAt || usage.FiveHourPercent is not double used)
+        {
+            _fiveHourReset.Visible = false;
+            return;
+        }
+
+        var remaining = resetsAt - DateTimeOffset.Now;
+        if (remaining <= TimeSpan.Zero)
+        {
+            _fiveHourReset.Visible = false;
+            return;
+        }
+
+        var remainingPercent = Math.Clamp(100d - used, 0d, 100d);
+        var resetText = remaining.TotalHours >= 1
+            ? $"{(int)remaining.TotalHours}h {remaining.Minutes:D2}m"
+            : $"{Math.Max(1, remaining.Minutes)}m";
+        _fiveHourReset.Text = string.Format(Ui.S("Dashboard.FiveHourReset"), resetText, remainingPercent.ToString("N0"));
+        _fiveHourReset.Visible = true;
     }
 
     private void UpdateCreditActionText()

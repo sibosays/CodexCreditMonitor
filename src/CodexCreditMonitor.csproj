@@ -9,9 +9,10 @@
     <AssemblyName>CodexCreditMonitor</AssemblyName>
     <RootNamespace>CodexCreditMonitor</RootNamespace>
     <ApplicationIcon>Assets\codex-credit-monitor.ico</ApplicationIcon>
-    <Version>2.1.1</Version>
+    <Version>2.2.0</Version>
   </PropertyGroup>
   <ItemGroup>
+    <Content Include="README.md" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="WhatsNew.md" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

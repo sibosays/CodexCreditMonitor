@@ -7,6 +7,7 @@ internal sealed record UsageSummary(
     bool HasData,
     decimal? CreditBalance,
     double? FiveHourPercent,
+    DateTimeOffset? FiveHourResetsAt,
     double? WeekPercent,
     DateTimeOffset? LastUpdate,
     int TodayRequests,
@@ -26,7 +27,7 @@ internal static class UsageReader
         {
             var sessionsRoot = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".codex", "sessions");
             if (!Directory.Exists(sessionsRoot))
-                return new UsageSummary(false, null, null, null, null, 0, 0, [], [], Ui.T("Geen lokale Codex-sessies gevonden.", "No local Codex sessions found."));
+                return new UsageSummary(false, null, null, null, null, null, 0, 0, [], [], Ui.T("Geen lokale Codex-sessies gevonden.", "No local Codex sessions found."));
 
             var newest = new LatestState();
             var sessions = new List<SessionUsage>();
@@ -48,6 +49,7 @@ internal static class UsageReader
                 newest.LastUpdate is not null,
                 newest.CreditBalance,
                 newest.FiveHourPercent,
+                newest.FiveHourResetsAt,
                 newest.WeekPercent,
                 newest.LastUpdate,
                 todaySessions.Sum(s => s.Requests),
@@ -61,7 +63,7 @@ internal static class UsageReader
         }
         catch (Exception ex)
         {
-            return new UsageSummary(false, null, null, null, null, 0, 0, [], [], ex.Message);
+            return new UsageSummary(false, null, null, null, null, null, 0, 0, [], [], ex.Message);
         }
     }
 
@@ -139,6 +141,7 @@ internal static class UsageReader
                         newest.RateLimitsUpdate = timestamp;
                         newest.CreditBalance = balance;
                         newest.FiveHourPercent = GetDoublePath(limits, "primary", "used_percent");
+                        newest.FiveHourResetsAt = GetUnixTimePath(limits, "primary", "resets_at");
                         newest.WeekPercent = GetDoublePath(limits, "secondary", "used_percent");
                     }
                 }
@@ -202,6 +205,15 @@ internal static class UsageReader
         => element.ValueKind == JsonValueKind.Object && element.TryGetProperty(parent, out var child) &&
            child.ValueKind == JsonValueKind.Object && child.TryGetProperty(property, out var value) && value.TryGetDouble(out var result) ? result : null;
 
+    private static DateTimeOffset? GetUnixTimePath(JsonElement element, string parent, string property)
+    {
+        if (element.ValueKind != JsonValueKind.Object || !element.TryGetProperty(parent, out var child) ||
+            child.ValueKind != JsonValueKind.Object || !child.TryGetProperty(property, out var value)) return null;
+        if (!value.TryGetInt64(out var seconds)) return null;
+        try { return DateTimeOffset.FromUnixTimeSeconds(seconds); }
+        catch (ArgumentOutOfRangeException) { return null; }
+    }
+
     // Codex has used both a single `rate_limits` object and a per-limit map.
     // Keep the monitor compatible with either local log shape, without guessing
     // values from a non-Codex scope such as "premium".
@@ -246,6 +258,7 @@ internal static class UsageReader
     {
         public decimal? CreditBalance { get; set; }
         public double? FiveHourPercent { get; set; }
+        public DateTimeOffset? FiveHourResetsAt { get; set; }
         public double? WeekPercent { get; set; }
         public DateTimeOffset? LastUpdate { get; set; }
         public DateTimeOffset? RateLimitsUpdate { get; set; }
