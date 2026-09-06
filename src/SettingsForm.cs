@@ -30,10 +30,11 @@ internal sealed class SettingsForm : Form
 
         Text = $"{Ui.T("Instellingen", "Settings")} · Codex Credit Monitor";
         Icon = Program.AppIcon;
-        ClientSize = new Size(462, 536);
-        MinimumSize = Size;
-        MaximumSize = Size;
+        AutoScaleMode = AutoScaleMode.Dpi;
+        ClientSize = new Size(480, 560);
         FormBorderStyle = FormBorderStyle.FixedDialog;
+        MaximizeBox = false;
+        SizeGripStyle = SizeGripStyle.Hide;
         StartPosition = FormStartPosition.CenterScreen;
         BackColor = Color.FromArgb(15, 22, 35);
         Font = new Font("Segoe UI", 10);
@@ -70,6 +71,7 @@ internal sealed class SettingsForm : Form
         intervalTitle.Location = new Point(16, 14);
         var intervalDescription = Label(Ui.T("Lees lokale sessies op de achtergrond.", "Read local sessions in the background."), 9, FontStyle.Regular, Color.FromArgb(150, 172, 197));
         intervalDescription.Location = new Point(16, 37);
+        intervalDescription.AutoSize = false;
         interval.Controls.AddRange([intervalTitle, intervalDescription]);
         foreach (var minutes in new[] { 1, 2, 5 })
         {
@@ -87,6 +89,7 @@ internal sealed class SettingsForm : Form
         languageTitle.Location = new Point(16, 13);
         var languageDescription = Label(Ui.T("Pas alle wijzigingen samen toe.", "Apply all changes together."), 8.5f, FontStyle.Regular, Color.FromArgb(150, 172, 197));
         languageDescription.Location = new Point(16, 46);
+        languageDescription.AutoSize = false;
         _languageChoice = new ComboBox { DropDownStyle = ComboBoxStyle.DropDownList, Location = new Point(215, 21), Size = new Size(184, 25), Font = new Font("Segoe UI", 9) };
         _languageChoice.Items.AddRange(["Automatisch (Windows)", "Nederlands", "English"]);
         _languageChoice.SelectedIndex = _settings.Language switch { "nl" => 1, "en" => 2, _ => 0 };
@@ -97,6 +100,9 @@ internal sealed class SettingsForm : Form
         language.Controls.AddRange([languageTitle, languageDescription, _languageChoice]);
 
         Controls.AddRange([title, subtitle, startup, alerts, sound, interval, language, _applyButton]);
+        void Relayout() => LayoutAdaptive(title, subtitle, startup, alerts, sound, interval, intervalDescription, language, languageDescription);
+        Shown += (_, _) => Relayout();
+        DpiChanged += (_, _) => BeginInvoke(Relayout);
     }
 
     private SettingsCard Card(string titleText, string descriptionText, int y, ToggleSwitch toggle)
@@ -106,6 +112,7 @@ internal sealed class SettingsForm : Form
         title.Location = new Point(16, 13);
         var description = Label(descriptionText, 9, FontStyle.Regular, Color.FromArgb(150, 172, 197));
         description.Location = new Point(16, 38);
+        description.AutoSize = false;
         description.Size = new Size(320, 18);
         card.Controls.AddRange([title, description, toggle]);
         return card;
@@ -116,6 +123,97 @@ internal sealed class SettingsForm : Form
         _selectedInterval = minutes;
         foreach (var chip in _intervalChoices) chip.Selected = chip.Text == $"{minutes} min.";
         MarkChanges();
+    }
+
+    private void LayoutAdaptive(
+        Label title,
+        Label subtitle,
+        SettingsCard startup,
+        SettingsCard alerts,
+        SettingsCard sound,
+        SettingsCard interval,
+        Label intervalDescription,
+        SettingsCard language,
+        Label languageDescription)
+    {
+        var scale = DeviceDpi / 96f;
+        int S(int value) => (int)Math.Round(value * scale);
+        var clientWidth = S(480);
+        var margin = S(23);
+        var cardWidth = clientWidth - margin * 2;
+        MinimumSize = Size.Empty;
+        MaximumSize = Size.Empty;
+        ClientSize = new Size(clientWidth, ClientSize.Height);
+
+        title.Location = new Point(S(30), S(20));
+        subtitle.AutoSize = false;
+        subtitle.Location = new Point(S(31), title.Bottom + S(2));
+        subtitle.Size = MeasureWrapped(subtitle, clientWidth - S(62));
+        var y = subtitle.Bottom + S(16);
+
+        foreach (var card in new[] { startup, alerts, sound })
+        {
+            card.Location = new Point(margin, y);
+            card.Width = cardWidth;
+            var cardTitle = card.Controls.OfType<Label>().Single(label => label.Font.Bold);
+            var description = card.Controls.OfType<Label>().Single(label => !label.Font.Bold);
+            var toggle = card.Controls.OfType<ToggleSwitch>().Single();
+            var textWidth = cardWidth - S(16 + 16 + 58);
+            cardTitle.Location = new Point(S(16), S(12));
+            description.Location = new Point(S(16), cardTitle.Bottom + S(5));
+            description.Size = MeasureWrapped(description, textWidth);
+            card.Height = Math.Max(S(76), description.Bottom + S(14));
+            toggle.Location = new Point(cardWidth - toggle.Width - S(16), (card.Height - toggle.Height) / 2);
+            y = card.Bottom + S(8);
+        }
+
+        interval.Location = new Point(margin, y);
+        interval.Width = cardWidth;
+        var intervalTitle = interval.Controls.OfType<Label>().First(label => !ReferenceEquals(label, intervalDescription));
+        var chipGap = S(4);
+        var chipsWidth = _intervalChoices.Sum(chip => chip.Width) + chipGap * (_intervalChoices.Count - 1);
+        var chipStart = cardWidth - S(16) - chipsWidth;
+        intervalTitle.Location = new Point(S(16), S(12));
+        intervalDescription.Location = new Point(S(16), intervalTitle.Bottom + S(5));
+        intervalDescription.Size = MeasureWrapped(intervalDescription, chipStart - S(28));
+        interval.Height = Math.Max(S(76), intervalDescription.Bottom + S(14));
+        var chipX = chipStart;
+        foreach (var chip in _intervalChoices)
+        {
+            chip.Location = new Point(chipX, (interval.Height - chip.Height) / 2);
+            chipX += chip.Width + chipGap;
+        }
+        y = interval.Bottom + S(8);
+
+        language.Location = new Point(margin, y);
+        language.Width = cardWidth;
+        var languageTitle = language.Controls.OfType<Label>().First(label => !ReferenceEquals(label, languageDescription));
+        var choice = _languageChoice!;
+        choice.Location = new Point(cardWidth - choice.Width - S(16), S(20));
+        languageTitle.Location = new Point(S(16), S(12));
+        languageDescription.Location = new Point(S(16), languageTitle.Bottom + S(5));
+        languageDescription.Size = MeasureWrapped(languageDescription, choice.Left - S(28));
+        language.Height = Math.Max(S(76), Math.Max(languageDescription.Bottom + S(14), choice.Bottom + S(16)));
+        y = language.Bottom + S(14);
+
+        _applyButton.Location = new Point(clientWidth - margin - _applyButton.Width, y);
+        var requestedHeight = _applyButton.Bottom + S(16);
+        var availableHeight = Screen.FromControl(this).WorkingArea.Height - S(40);
+        ClientSize = new Size(clientWidth, Math.Min(requestedHeight, availableHeight));
+        AutoScroll = requestedHeight > availableHeight;
+        AutoScrollMinSize = new Size(0, requestedHeight);
+        MinimumSize = Size;
+        MaximumSize = Size;
+    }
+
+    private static Size MeasureWrapped(Label label, int width)
+    {
+        var measured = TextRenderer.MeasureText(
+            label.Text,
+            label.Font,
+            new Size(Math.Max(1, width), int.MaxValue),
+            TextFormatFlags.WordBreak | TextFormatFlags.NoPadding);
+        return new Size(Math.Max(1, width), Math.Max(label.Font.Height, measured.Height));
     }
 
     private string SelectedLanguage() => _languageChoice?.SelectedIndex switch { 1 => "nl", 2 => "en", _ => "auto" };
@@ -157,7 +255,8 @@ internal sealed class SettingsForm : Form
         AutoSize = true,
         Font = new Font("Segoe UI", size, style),
         ForeColor = color,
-        BackColor = Color.Transparent
+        BackColor = Color.Transparent,
+        UseMnemonic = false
     };
 }
 

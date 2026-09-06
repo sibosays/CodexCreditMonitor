@@ -23,6 +23,8 @@
   <data name="Dashboard.RefreshFailed" xml:space="preserve"><value>Refresh failed — please try again.</value></data>
   <data name="Dashboard.UpdatedAt" xml:space="preserve"><value>Last updated {0} · realtime monitored</value></data>
   <data name="Dashboard.FiveHourReset" xml:space="preserve"><value>5-hour limit · resets in {0} · {1}% remaining</value></data>
+  <data name="Dashboard.FiveHourWaiting" xml:space="preserve"><value>5-hour limit · loading current reset data…</value></data>
+  <data name="Dashboard.FiveHourRefreshing" xml:space="preserve"><value>5-hour limit · waiting for the next window…</value></data>
   <data name="Info.Concept" xml:space="preserve"><value>Concept &amp; Development: C.S.K. (Simon) Bouwens</value></data>
   <data name="Info.Ai" xml:space="preserve"><value>© 2026 C.S.K. (Simon) Bouwens · Built with AI assistance</value></data>
 </root>

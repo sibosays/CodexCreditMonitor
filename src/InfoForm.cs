@@ -4,8 +4,11 @@ namespace CodexCreditMonitor;
 
 internal sealed class InfoForm : Form
 {
-    private const int EmLineScroll = 0x00B6;
-    private readonly System.Windows.Forms.Timer _scrollTimer = new() { Interval = 1_250 };
+    private const int EmGetScrollPos = 0x04DD;
+    private const int EmSetScrollPos = 0x04DE;
+    private readonly System.Windows.Forms.Timer _scrollTimer = new() { Interval = 30 };
+    private readonly int _secondCopyStart;
+    private int _loopHeight;
     public InfoForm(string version, string markdown)
     {
         Text = "Codex Credit Monitor · Info";
@@ -36,6 +39,9 @@ internal sealed class InfoForm : Form
         var author = Header(Ui.S("Info.Concept"), 10, FontStyle.Bold, Color.FromArgb(193, 214, 241));
         var copyright = Header(Ui.S("Info.Ai"), 9, FontStyle.Italic, Color.FromArgb(154, 177, 207));
         var line = new Panel { Dock = DockStyle.Fill, Height = 1, BackColor = Color.FromArgb(59, 79, 104), Margin = Padding.Empty };
+        var displayText = ToDisplayText(markdown);
+        var loopGap = string.Concat(Enumerable.Repeat(Environment.NewLine, 6));
+        _secondCopyStart = displayText.Length + loopGap.Length;
         var content = new RichTextBox
         {
             Dock = DockStyle.Fill,
@@ -44,7 +50,7 @@ internal sealed class InfoForm : Form
             BackColor = BackColor,
             ForeColor = Color.FromArgb(221, 232, 246),
             Font = new Font("Segoe UI", 10),
-            Text = ToDisplayText(markdown),
+            Text = displayText + loopGap + displayText,
             DetectUrls = true,
             ScrollBars = RichTextBoxScrollBars.Vertical,
             Margin = new Padding(0, 16, 0, 0),
@@ -58,7 +64,7 @@ internal sealed class InfoForm : Form
         root.Controls.Add(content, 0, 5);
         content.MouseEnter += (_, _) => _scrollTimer.Stop();
         content.MouseLeave += (_, _) => StartDescriptionScroll(content);
-        Shown += (_, _) => StartDescriptionScroll(content);
+        Shown += (_, _) => BeginInvoke(() => StartDescriptionScroll(content));
         FormClosed += (_, _) => _scrollTimer.Dispose();
         _scrollTimer.Tick += (_, _) => ScrollDescription(content);
 
@@ -67,25 +73,31 @@ internal sealed class InfoForm : Form
 
     private void StartDescriptionScroll(RichTextBox content)
     {
-        if (content.TextLength == 0) return;
-        var lastCharacter = content.GetPositionFromCharIndex(content.TextLength - 1);
-        if (lastCharacter.Y > content.ClientSize.Height - 18) _scrollTimer.Start();
+        if (_secondCopyStart <= 0 || content.IsDisposed) return;
+        var firstCopyBottom = content.GetPositionFromCharIndex(Math.Max(0, _secondCopyStart - 7));
+        if (firstCopyBottom.Y <= content.ClientSize.Height - 18) return;
+        _loopHeight = Math.Max(1, content.GetPositionFromCharIndex(_secondCopyStart).Y);
+        _scrollTimer.Start();
     }
 
-    private static void ScrollDescription(RichTextBox content)
+    private void ScrollDescription(RichTextBox content)
     {
-        var bottomIndex = content.GetCharIndexFromPosition(new Point(1, content.ClientSize.Height - 2));
-        if (bottomIndex >= content.TextLength - 1)
-        {
-            content.SelectionStart = 0;
-            content.ScrollToCaret();
-            return;
-        }
-        SendMessage(content.Handle, EmLineScroll, IntPtr.Zero, (IntPtr)1);
+        if (_loopHeight <= 0 || content.IsDisposed) return;
+        var position = new NativePoint();
+        SendMessage(content.Handle, EmGetScrollPos, IntPtr.Zero, ref position);
+        position.Y = position.Y + 1 >= _loopHeight ? position.Y + 1 - _loopHeight : position.Y + 1;
+        SendMessage(content.Handle, EmSetScrollPos, IntPtr.Zero, ref position);
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct NativePoint
+    {
+        public int X;
+        public int Y;
     }
 
     [DllImport("user32.dll")]
-    private static extern int SendMessage(IntPtr handle, int message, IntPtr wParam, IntPtr lParam);
+    private static extern int SendMessage(IntPtr handle, int message, IntPtr wParam, ref NativePoint lParam);
 
     private static Label Header(string text, float size, FontStyle style, Color color) => new()
     {

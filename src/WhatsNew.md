@@ -3,8 +3,11 @@
 
 ## Nieuw in 2.2
 
-- De statuszone van het dashboard toont nu de echte resterende tijd tot de reset van het actuele 5-uursvenster, plus het resterende percentage. Beide waarden komen uit de lokale Codex-limietregistratie.
+- De tegoedkaart toont permanent en sneller de echte resterende tijd tot de reset van het actuele 5-uursvenster, plus het resterende percentage. Tijdelijke vernieuwingsmeldingen vervangen deze informatie niet.
 - Info toont voortaan uitsluitend de professionele, actuele productbeschrijving uit `README.md`. Wijzigingsgeschiedenis blijft in dit afzonderlijke What's New-bronbestand.
+- Herstelt Engelse tooltips, adaptieve meertalige instellingen, het vaste compacte dashboardformaat en vloeiend continu Info-scrollen.
+- Bewaart het laatst geldige verbruikstempo, negeert ongeldige negatieve metingen en vernieuwt alleen met betrouwbare achtergronddata.
+- Ontkoppelt de tray-app van het startende ChatGPT/Codex-proces zodat de monitor zelfstandig actief blijft.
 
 ## v2.1.1
 
@@ -48,8 +51,11 @@ Het dashboard open je vanuit het systeemvak. Instellingen, handmatig vernieuwen 
 
 ## New in 2.2
 
-- The dashboard status area now shows the real time remaining until the current 5-hour window resets, together with the remaining percentage. Both values come from local Codex rate-limit records.
+- The credit card permanently and more quickly shows the real time remaining until the current 5-hour window resets, together with the remaining percentage. Temporary refresh feedback never replaces it.
 - Info now shows only the professional, current product description from `README.md`. Change history remains in this separate What's New source file.
+- Restores English tooltips, adaptive bilingual Settings layout, the fixed compact dashboard size, and smooth continuous Info scrolling.
+- Preserves the last valid usage pace, rejects invalid negative measurements, and replaces it only with reliable background data.
+- Detaches the tray application from its launching ChatGPT/Codex process so the monitor remains independently active.
 
 ## v2.1.1
 

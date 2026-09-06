@@ -11,6 +11,8 @@ internal sealed class MonitorSettings
     public int AutoRechargeTarget { get; set; } = 250;
     public string Language { get; set; } = "auto";
     public bool ReopenDashboardAfterLanguageChange { get; set; }
+    public decimal? LastValidCreditsPerHour { get; set; }
+    public DateTimeOffset? LastCreditPaceMeasuredAt { get; set; }
 
     public static bool IsPortableMode => !string.IsNullOrWhiteSpace(
         Environment.GetEnvironmentVariable("CODEX_CREDIT_MONITOR_DATA_DIR"));

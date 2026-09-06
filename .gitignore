@@ -8,7 +8,6 @@
 /tools/
 /Distributie/
 /github-release/
-/Design/
 
 # Productdocumentatie en pakketten blijven lokaal; de repository volgt alleen broncode.
 /README.md

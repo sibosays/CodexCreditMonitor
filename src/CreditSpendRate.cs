@@ -16,6 +16,8 @@ internal sealed record CreditSpendRate(
 
 internal static class CreditSpendRateDetector
 {
+    internal const decimal MaxCredibleCreditsPerHour = 10_000m;
+    private static readonly TimeSpan MinimumObservation = TimeSpan.FromMinutes(1);
     private static readonly TimeSpan ShortWindow = TimeSpan.FromMinutes(30);
     private static readonly TimeSpan LongWindow = TimeSpan.FromHours(2);
     private const decimal RapidShortDrop = 12m;
@@ -27,6 +29,7 @@ internal static class CreditSpendRateDetector
     public static CreditSpendRate? Analyze(IReadOnlyList<CreditBalanceSample> samples)
     {
         var history = samples
+            .Where(sample => sample.Balance >= 0m && sample.Timestamp != default)
             .OrderBy(sample => sample.Timestamp)
             .GroupBy(sample => sample.Timestamp)
             .Select(group => group.Last())
@@ -49,7 +52,9 @@ internal static class CreditSpendRateDetector
 
         var longSpend = longBaseline.Balance - current.Balance;
         var longDuration = current.Timestamp - longBaseline.Timestamp;
+        if (longSpend <= 0m || longDuration < MinimumObservation) return null;
         var rate = longSpend / Math.Max(0.01m, (decimal)longDuration.TotalHours);
+        if (rate < 0m || rate > MaxCredibleCreditsPerHour) return null;
 
         var shortBaseline = currentRun.FirstOrDefault(sample => sample.Timestamp >= current.Timestamp - ShortWindow);
         var shortSpend = shortBaseline is not null && shortBaseline.Timestamp < current.Timestamp && shortBaseline.Balance > current.Balance

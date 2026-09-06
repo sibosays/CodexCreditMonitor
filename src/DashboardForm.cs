@@ -26,6 +26,7 @@ internal sealed class DashboardForm : Form
     // A burst of Codex log activity yields at most one additional low-priority read per minute.
     private readonly System.Windows.Forms.Timer _fileChangeDebounce = new() { Interval = 60_000 };
     private readonly System.Windows.Forms.Timer _bannerTimer = new() { Interval = 5_000 };
+    private readonly System.Windows.Forms.Timer _countdownTimer = new() { Interval = 30_000 };
     private readonly Panel _refreshBanner = new() { Height = 24, BackColor = Color.Transparent, Visible = false };
     private readonly Label _refreshBannerText = NewLabel(9, FontStyle.Bold, Color.FromArgb(220, 238, 255));
     private readonly ToolTip _headerToolTip = new()
@@ -35,8 +36,12 @@ internal sealed class DashboardForm : Form
         AutoPopDelay = 10_000,
         ShowAlways = true
     };
+    private readonly MonitorSettings _settings;
     private readonly HeaderIconButton _addCredits;
     private readonly HeaderIconButton _useCredits;
+    private readonly HeaderIconButton _infoButton;
+    private readonly HeaderIconButton _settingsButton;
+    private readonly HeaderIconButton _refreshButton;
     private double? _lastWarnedPercent;
     private decimal? _lastWarnedCreditThreshold;
     private CreditSpendAlertLevel _lastCreditSpendAlertLevel;
@@ -47,6 +52,8 @@ internal sealed class DashboardForm : Form
     private FileSystemWatcher? _sessionWatcher;
     private bool _pulseAddCreditsWhenShown;
     private bool _pulseUseCreditsWhenShown;
+    private DateTimeOffset? _lastFiveHourResetsAt;
+    private double? _lastFiveHourUsedPercent;
 
     public event Action<double>? WarningRaised;
     public event Action<decimal>? LowCreditWarningRaised;
@@ -59,13 +66,15 @@ internal sealed class DashboardForm : Form
     [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
     internal UsageSummary? LatestUsage { get; private set; }
 
-    public DashboardForm()
+    public DashboardForm(MonitorSettings settings)
     {
+        _settings = settings;
         Text = "Codex Credit Monitor";
         Icon = Program.AppIcon;
-        ClientSize = new Size(450, 730);
-        MinimumSize = new Size(420, 730);
+        ClientSize = new Size(450, 758);
+        FormBorderStyle = FormBorderStyle.FixedDialog;
         MaximizeBox = false;
+        SizeGripStyle = SizeGripStyle.Hide;
         StartPosition = FormStartPosition.CenterScreen;
         BackColor = Color.FromArgb(15, 22, 35);
         Font = new Font("Segoe UI", 10);
@@ -91,12 +100,12 @@ internal sealed class DashboardForm : Form
         // reset state easy to scan below the ordinary update status.
         _fiveHourReset.Location = new Point(1, 64);
         _fiveHourReset.AutoSize = true;
-        var refresh = new HeaderIconButton(HeaderIcon.Refresh) { Location = new Point(366, 0), Anchor = AnchorStyles.Top | AnchorStyles.Right, AccessibleName = Ui.T("Vernieuwen", "Refresh") };
-        refresh.Click += (_, _) => RefreshUsage();
-        var settings = new HeaderIconButton(HeaderIcon.Settings) { Location = new Point(322, 0), Anchor = AnchorStyles.Top | AnchorStyles.Right, AccessibleName = Ui.T("Instellingen", "Settings") };
-        settings.Click += (_, _) => SettingsRequested?.Invoke();
-        var info = new HeaderIconButton(HeaderIcon.Info) { Location = new Point(278, 0), Anchor = AnchorStyles.Top | AnchorStyles.Right, AccessibleName = Ui.T("Info", "About") };
-        info.Click += (_, _) => InfoRequested?.Invoke();
+        _refreshButton = new HeaderIconButton(HeaderIcon.Refresh) { Location = new Point(366, 0), Anchor = AnchorStyles.Top | AnchorStyles.Right };
+        _refreshButton.Click += (_, _) => RefreshUsage();
+        _settingsButton = new HeaderIconButton(HeaderIcon.Settings) { Location = new Point(322, 0), Anchor = AnchorStyles.Top | AnchorStyles.Right };
+        _settingsButton.Click += (_, _) => SettingsRequested?.Invoke();
+        _infoButton = new HeaderIconButton(HeaderIcon.Info) { Location = new Point(278, 0), Anchor = AnchorStyles.Top | AnchorStyles.Right };
+        _infoButton.Click += (_, _) => InfoRequested?.Invoke();
         _useCredits = new HeaderIconButton(HeaderIcon.UseCredits) { Location = new Point(234, 0), Anchor = AnchorStyles.Top, Visible = false };
         _useCredits.Click += (_, _) => UseCreditsRequested?.Invoke();
         _addCredits = new HeaderIconButton(HeaderIcon.AddCredits) { Location = new Point(190, 0), Anchor = AnchorStyles.Top, Visible = false };
@@ -106,18 +115,16 @@ internal sealed class DashboardForm : Form
         {
             if (Visible) PulseVisibleCreditActions();
         };
-        _headerToolTip.SetToolTip(info, Ui.T("Info", "About"));
-        _headerToolTip.SetToolTip(settings, Ui.T("Instellingen", "Settings"));
-        _headerToolTip.SetToolTip(refresh, Ui.T("Nu vernieuwen", "Refresh now"));
+        UpdateHeaderActionText();
         _refreshBanner.Location = new Point(0, 59);
         _refreshBanner.Width = 262;
         _refreshBanner.Padding = new Padding(9, 3, 8, 2);
         _refreshBannerText.Dock = DockStyle.Fill;
         _refreshBannerText.TextAlign = ContentAlignment.MiddleLeft;
         _refreshBanner.Controls.Add(_refreshBannerText);
-        header.Controls.AddRange([title, _updated, _fiveHourReset, _addCredits, _useCredits, info, settings, refresh, _refreshBanner]);
+        header.Controls.AddRange([title, _updated, _addCredits, _useCredits, _infoButton, _settingsButton, _refreshButton, _refreshBanner]);
 
-        var balanceCard = Card(154);
+        var balanceCard = Card(182);
         var balanceCaption = NewLabel(11, FontStyle.Regular, Color.FromArgb(168, 185, 205));
         balanceCaption.Name = "balanceCaption";
         balanceCaption.Text = Ui.S("Dashboard.AvailableBalance");
@@ -132,13 +139,16 @@ internal sealed class DashboardForm : Form
         _balanceNote.Dock = DockStyle.Fill;
         _balanceNote.TextAlign = ContentAlignment.MiddleLeft;
         _autoRechargeBadge.Controls.Add(_balanceNote);
-        _creditPaceBadge.Location = new Point(16, 113);
+        _fiveHourReset.Location = new Point(25, 116);
+        _fiveHourReset.Size = new Size(350, 18);
+        _fiveHourReset.AutoEllipsis = true;
+        _creditPaceBadge.Location = new Point(16, 141);
         _creditPaceBadge.Size = new Size(370, 23);
         _creditPaceBadge.Padding = new Padding(9, 3, 8, 2);
         _creditPaceNote.Dock = DockStyle.Fill;
         _creditPaceNote.TextAlign = ContentAlignment.MiddleLeft;
         _creditPaceBadge.Controls.Add(_creditPaceNote);
-        balanceCard.Controls.AddRange([balanceCaption, _balance, _autoRechargeBadge, _creditPaceBadge]);
+        balanceCard.Controls.AddRange([balanceCaption, _balance, _autoRechargeBadge, _fiveHourReset, _creditPaceBadge]);
 
         var bars = Card(142);
         _fiveHour.Location = new Point(17, 14);
@@ -168,6 +178,7 @@ internal sealed class DashboardForm : Form
         var stack = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.TopDown, WrapContents = false, AutoScroll = false, BackColor = Color.Transparent, Padding = new Padding(0) };
         stack.Controls.AddRange([header, Spacer(6), balanceCard, Spacer(12), bars, Spacer(12), metrics, Spacer(6), sessionsCard]);
         root.Controls.Add(stack);
+        FitToContent();
 
         _refreshTimer.Tick += (_, _) => RefreshUsage();
         _fileChangeDebounce.Tick += (_, _) =>
@@ -180,6 +191,8 @@ internal sealed class DashboardForm : Form
             _refreshBanner.Visible = false;
             UpdateFiveHourReset(LatestUsage);
         };
+        _countdownTimer.Tick += (_, _) => UpdateFiveHourReset(LatestUsage);
+        _countdownTimer.Start();
         _refreshTimer.Start();
         Ui.LanguageChanged += OnLanguageChanged;
     }
@@ -199,7 +212,12 @@ internal sealed class DashboardForm : Form
         ShowRefreshBanner(Ui.S("Dashboard.Refreshing"), Color.Transparent, Color.FromArgb(171, 202, 242), hideAfter: false);
         try
         {
-            var usage = await Task.Run(UsageReader.Read);
+            var quickLimitsTask = Task.Run(UsageReader.ReadLatestLimits);
+            var usageTask = Task.Run(UsageReader.Read);
+            var quickLimits = await quickLimitsTask;
+            if (IsDisposed) return;
+            ApplyQuickLimits(quickLimits);
+            var usage = await usageTask;
             if (IsDisposed) return;
             ApplyUsage(usage);
             ShowRefreshBanner($"{Ui.S("Dashboard.Refreshed")} · {DateTime.Now:HH:mm:ss}", Color.Transparent, Color.FromArgb(130, 208, 174), hideAfter: true);
@@ -260,6 +278,7 @@ internal sealed class DashboardForm : Form
         _week.SetLabel(Ui.S("Dashboard.WeeklyUsage"));
         UpdateFiveHourReset(LatestUsage);
         UpdateCreditActionText();
+        UpdateHeaderActionText();
         // This label is not derived from a usage read, so translate it explicitly
         // instead of waiting for the next dashboard refresh.
         UpdateBalanceNote();
@@ -289,7 +308,6 @@ internal sealed class DashboardForm : Form
         _refreshBannerText.ForeColor = foreground;
         _refreshBannerText.Text = message;
         _refreshBanner.Visible = true;
-        _fiveHourReset.Visible = false;
         if (hideAfter) _bannerTimer.Start();
     }
 
@@ -354,6 +372,7 @@ internal sealed class DashboardForm : Form
         var creditSpendRate = CreditSpendRateDetector.Analyze(usage.CreditBalanceHistory);
         UpdateCreditPace(usage, creditSpendRate);
         ShowRapidCreditSpendWarningIfNeeded(creditSpendRate);
+        FitToContent();
     }
 
     private void UpdateBalanceNote()
@@ -364,16 +383,24 @@ internal sealed class DashboardForm : Form
 
     private void UpdateFiveHourReset(UsageSummary? usage)
     {
-        if (usage?.FiveHourResetsAt is not DateTimeOffset resetsAt || usage.FiveHourPercent is not double used)
+        if (usage?.FiveHourResetsAt is DateTimeOffset currentReset && usage.FiveHourPercent is double currentUsed)
         {
-            _fiveHourReset.Visible = false;
+            _lastFiveHourResetsAt = currentReset;
+            _lastFiveHourUsedPercent = currentUsed;
+        }
+
+        if (_lastFiveHourResetsAt is not DateTimeOffset resetsAt || _lastFiveHourUsedPercent is not double used)
+        {
+            _fiveHourReset.Text = Ui.S("Dashboard.FiveHourWaiting");
+            _fiveHourReset.Visible = true;
             return;
         }
 
         var remaining = resetsAt - DateTimeOffset.Now;
         if (remaining <= TimeSpan.Zero)
         {
-            _fiveHourReset.Visible = false;
+            _fiveHourReset.Text = Ui.S("Dashboard.FiveHourRefreshing");
+            _fiveHourReset.Visible = true;
             return;
         }
 
@@ -383,6 +410,24 @@ internal sealed class DashboardForm : Form
             : $"{Math.Max(1, remaining.Minutes)}m";
         _fiveHourReset.Text = string.Format(Ui.S("Dashboard.FiveHourReset"), resetText, remainingPercent.ToString("N0"));
         _fiveHourReset.Visible = true;
+    }
+
+    private void ApplyQuickLimits(UsageLimitSnapshot? limits)
+    {
+        if (limits is null) return;
+        _lastFiveHourResetsAt = limits.FiveHourResetsAt;
+        _lastFiveHourUsedPercent = limits.FiveHourPercent;
+        UpdateFiveHourReset(null);
+    }
+
+    private void UpdateHeaderActionText()
+    {
+        _infoButton.AccessibleName = Ui.T("Productinformatie", "Product information");
+        _settingsButton.AccessibleName = Ui.T("Instellingen", "Settings");
+        _refreshButton.AccessibleName = Ui.T("Nu vernieuwen", "Refresh now");
+        _headerToolTip.SetToolTip(_infoButton, Ui.T("Productinformatie", "Product information"));
+        _headerToolTip.SetToolTip(_settingsButton, Ui.T("Instellingen", "Settings"));
+        _headerToolTip.SetToolTip(_refreshButton, Ui.T("Nu vernieuwen", "Refresh now"));
     }
 
     private void UpdateCreditActionText()
@@ -444,13 +489,24 @@ internal sealed class DashboardForm : Form
             return;
         }
 
+        if (rate is { CreditsPerHour: >= 0m } && rate.CreditsPerHour <= CreditSpendRateDetector.MaxCredibleCreditsPerHour)
+        {
+            if (_settings.LastValidCreditsPerHour != rate.CreditsPerHour)
+            {
+                _settings.LastValidCreditsPerHour = rate.CreditsPerHour;
+                _settings.LastCreditPaceMeasuredAt = DateTimeOffset.Now;
+                _settings.Save();
+            }
+        }
+
+        var displayedRate = rate?.CreditsPerHour ?? _settings.LastValidCreditsPerHour;
         _creditPaceBadge.BackColor = Color.Transparent;
         _creditPaceNote.ForeColor = rate?.AlertLevel == CreditSpendAlertLevel.Critical
             ? Color.FromArgb(255, 181, 184)
             : Color.FromArgb(235, 204, 136);
-        _creditPaceNote.Text = rate is null
-            ? Ui.T("VERBRUIKSTEMPO · lokale metingen worden verzameld", "USAGE PACE · collecting local measurements")
-            : Ui.T($"VERBRUIKSTEMPO · {rate.CreditsPerHour:N1} credits/uur", $"USAGE PACE · {rate.CreditsPerHour:N1} credits/hour");
+        _creditPaceNote.Text = displayedRate is decimal validRate
+            ? Ui.T($"VERBRUIKSTEMPO · {validRate:N1} credits/uur", $"USAGE PACE · {validRate:N1} credits/hour")
+            : Ui.T("VERBRUIKSTEMPO · lokale metingen worden verzameld", "USAGE PACE · collecting local measurements");
     }
 
     private void UpdateSessions(IReadOnlyList<SessionUsage> sessions)
@@ -564,6 +620,20 @@ internal sealed class DashboardForm : Form
         e.Graphics.FillRectangle(brush, ClientRectangle);
     }
 
+    private void FitToContent()
+    {
+        if (Controls.Count == 0 || Controls[0] is not Panel root) return;
+        var stack = root.Controls.OfType<FlowLayoutPanel>().FirstOrDefault();
+        if (stack is null) return;
+        var contentHeight = stack.Controls.Cast<Control>().Sum(control => control.Height + control.Margin.Vertical) + root.Padding.Vertical;
+        var targetClientSize = new Size(ContentWidth + root.Padding.Horizontal, contentHeight);
+        MinimumSize = Size.Empty;
+        MaximumSize = Size.Empty;
+        ClientSize = targetClientSize;
+        MinimumSize = Size;
+        MaximumSize = Size;
+    }
+
     protected override void Dispose(bool disposing)
     {
         if (disposing)
@@ -571,6 +641,9 @@ internal sealed class DashboardForm : Form
             Ui.LanguageChanged -= OnLanguageChanged;
             _sessionWatcher?.Dispose();
             _fileChangeDebounce.Dispose();
+            _countdownTimer.Dispose();
+            _bannerTimer.Dispose();
+            _refreshTimer.Dispose();
         }
         base.Dispose(disposing);
     }

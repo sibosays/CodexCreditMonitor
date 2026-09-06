@@ -25,12 +25,11 @@ All centrally stored changesets use the filename format `YYYY-MM-DD_CHANGESET_NN
 - Multiple changesets on the same date receive successive sequence numbers.
 - An assigned filename and sequence number remain stable; later edits do not change them.
 - Each changeset records at least: status, baseline, target release, objective, scope, acceptance criteria, test matrix, regression checks, exclusions, and delivery conditions.
-- Closed releases are not silently modified; newly registered work targets the next major version.
+- Closed releases are not silently modified. Changeset 003 is an explicitly authorized v2.2 bugfix exception and remains blocked from GitHub until user acceptance.
 
 Current sequence:
 
 - `2026-09-06_CHANGESET_001.md` — completed v2.1.1 bundle.
 - `2026-09-06_CHANGESET_002.md` — completed v2.2 stable-release bundle.
-- `2026-09-06_CHANGESET_003.md` — planned six-bug quality and stability bundle.
-
+- `2026-09-06_CHANGESET_003.md` — locally verified seven-bug v2.2 quality and stability bundle; awaiting user acceptance.
 

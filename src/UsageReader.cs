@@ -18,9 +18,77 @@ internal sealed record UsageSummary(
 
 internal sealed record SessionUsage(string Name, string Model, DateTimeOffset LastUpdate, int Requests, long Tokens);
 internal sealed record CreditBalanceSample(DateTimeOffset Timestamp, decimal Balance);
+internal sealed record UsageLimitSnapshot(
+    decimal? CreditBalance,
+    double? FiveHourPercent,
+    DateTimeOffset? FiveHourResetsAt,
+    double? WeekPercent,
+    DateTimeOffset UpdatedAt);
 
 internal static class UsageReader
 {
+    public static UsageLimitSnapshot? ReadLatestLimits()
+    {
+        try
+        {
+            var sessionsRoot = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".codex", "sessions");
+            if (!Directory.Exists(sessionsRoot)) return null;
+
+            UsageLimitSnapshot? newest = null;
+            var recentFiles = Directory.EnumerateFiles(sessionsRoot, "*.jsonl", SearchOption.AllDirectories)
+                .Select(path => new { Path = path, Modified = File.GetLastWriteTimeUtc(path) })
+                .Where(file => file.Modified >= DateTime.UtcNow.AddDays(-8))
+                .OrderByDescending(file => file.Modified)
+                .Take(8);
+
+            foreach (var file in recentFiles)
+            {
+                using var stream = new FileStream(file.Path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+                using var reader = new StreamReader(stream);
+                string? line;
+                while ((line = reader.ReadLine()) is not null)
+                {
+                    if (line.Length == 0) continue;
+                    try
+                    {
+                        using var document = JsonDocument.Parse(line);
+                        var root = document.RootElement;
+                        if (!TryGetTimestamp(root, out var timestamp) ||
+                            newest is not null && timestamp <= newest.UpdatedAt ||
+                            !root.TryGetProperty("type", out var type) || type.GetString() != "event_msg" ||
+                            !root.TryGetProperty("payload", out var payload) ||
+                            !payload.TryGetProperty("type", out var payloadType) || payloadType.GetString() != "token_count" ||
+                            !TryGetCodexLimits(payload, out var limits)) continue;
+
+                        newest = new UsageLimitSnapshot(
+                            GetDecimalPath(limits, "credits", "balance"),
+                            GetDoublePath(limits, "primary", "used_percent"),
+                            GetUnixTimePath(limits, "primary", "resets_at"),
+                            GetDoublePath(limits, "secondary", "used_percent"),
+                            timestamp);
+                    }
+                    catch (JsonException)
+                    {
+                        // The active log may end in a partial line; a later refresh retries it.
+                    }
+                }
+
+                // File modification order normally locates the current limits immediately.
+                if (newest is not null && file.Modified < newest.UpdatedAt.UtcDateTime) break;
+            }
+
+            return newest;
+        }
+        catch (IOException)
+        {
+            return null;
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return null;
+        }
+    }
+
     public static UsageSummary Read()
     {
         try
