@@ -1,0 +1,29 @@
+name: Publish Codex Credit Monitor v2.2
+
+on:
+  push:
+    tags:
+      - v2.2
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out release files
+        uses: actions/checkout@v4
+
+      - name: Create v2.2 release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            "downloads/CodexCreditMonitorSetup_2.2_x64.msi" \
+            "downloads/CodexCreditMonitorPortable_2.2.zip" \
+            "downloads/SHA256SUMS.txt" \
+            "assets/dashboard-v2.2.png#dashboard-v2.2.png" \
+            --title "Codex Credit Monitor v2.2" \
+            --notes-file ".github/release-notes-v2.2.md" \
+            --latest
