@@ -1,88 +1,94 @@
 # Codex Credit Monitor
 
-A lightweight Windows system-tray companion that turns local Codex session data into a clear, practical usage dashboard.
+A lightweight, privacy-focused Windows system-tray companion that turns local Codex session data into a clear and practical usage dashboard.
 
-![Codex Credit Monitor v2.2 dashboard](assets/dashboard-v2.2.png)
+![Codex Credit Monitor v2.2 dashboard showing the reset status and contextual credit actions](assets/dashboard-v2.2.png)
 
 ## Why use it?
 
-Codex usage information is useful, but it is easy to lose sight of your active allowance while working. Codex Credit Monitor keeps the most relevant signals close at hand so you can decide when to continue, slow down, add credits, or wait for a reset.
+Codex Credit Monitor keeps the signals that matter during a working session in one compact view. It helps you decide whether to continue, slow down, wait for the next allowance reset, add credits, or start using an available credit balance.
 
 At a glance, you can see:
 
 - Your available credit balance.
-- Usage in the current 5-hour window and the weekly window.
-- How long remains until the 5-hour window resets.
-- The allowance still remaining in that window.
+- Usage in the active 5-hour window and the weekly window.
+- The live 5-hour reset countdown and remaining allowance.
 - Today's model activity, processed tokens, and recent sessions.
-- Whether credits are being consumed unusually quickly.
+- Locally observed credit-use pace and optional alerts.
 
 ## How it works
 
-The application runs quietly in the Windows system tray. It reads local Codex session records for the signed-in Windows user and summarizes them in a compact dashboard. New local session activity can trigger an update, and you can also refresh manually or use a configurable refresh interval.
+The application runs quietly in the Windows system tray. It reads the signed-in Windows user's local Codex session records and summarizes them in the dashboard. New local activity can trigger an update, and you can also refresh manually or choose a refresh interval.
 
-No account credentials are requested. No usage data is uploaded, and the application does not call a billing service. It is an independent local monitor, not an official OpenAI billing meter.
+No account credentials are requested. No usage data is uploaded, and the application does not call a billing service. Codex Credit Monitor is an independent local monitor, not an official OpenAI billing meter.
 
-## Dashboard
+## Dashboard and contextual actions
 
-The dashboard combines credits, allowances, today's activity, recent sessions, and locally observed credit-use pace without crowding the layout.
+The dashboard combines credits, allowances, today's activity, and recent sessions without crowding the layout.
 
-## Contextual credit actions
-
-- **Add credits** appears when the available balance is 50 credits or lower.
-- **Use credits** appears when the included weekly allowance is exhausted and a positive credit balance is available.
-
-Both actions open ChatGPT Usage & Billing. Codex Credit Monitor never purchases credits or changes ChatGPT settings by itself.
+- **Add credits** appears only when the available balance is 50 credits or lower.
+- **Use credits** appears only when the included weekly allowance is exhausted and a positive credit balance is available.
+- Newly relevant actions briefly pulse to attract attention without permanently animating the interface.
+- Both actions open ChatGPT Usage & Billing. The application never purchases credits or changes ChatGPT settings by itself.
 
 ## Alerts
 
 Optional local notifications cover 75% and 90% 5-hour-window usage, low credit balances, and unusually rapid credit use. Notifications use the same usage and balance values shown on the dashboard.
 
-## PortableApps.com Platform support
+## Download v2.2
 
-Codex Credit Monitor v2.2 is a portable application that has been tested successfully inside the PortableApps.com Platform.
+Choose the package that matches how you use Windows:
 
-For PortableApps users this means:
+### Windows Installer (MSI)
 
-- Start it from the PortableApps.com menu as **Codex Credit Monitor Portable**.
-- Keep the complete application folder together when moving it between drives or computers.
-- Store application settings inside the package's own Data folder.
-- Run without installing a separate .NET Desktop Runtime.
-- Leave no permanent Windows startup entry when using the portable edition.
+[Download CodexCreditMonitorSetup_2.2_x64.msi](https://github.com/sibosays/CodexCreditMonitor/releases/latest/download/CodexCreditMonitorSetup_2.2_x64.msi)
 
-The package follows the PortableApps directory structure and includes its launcher, AppInfo metadata, application icon, and self-contained 64-bit Windows runtime.
+Use the MSI for a conventional 64-bit Windows installation. It installs the self-contained desktop application in Program Files and adds a Codex Credit Monitor shortcut to the Start menu.
+
+### PortableApps package (ZIP)
+
+[Download CodexCreditMonitorPortable_2.2.zip](https://github.com/sibosays/CodexCreditMonitor/releases/latest/download/CodexCreditMonitorPortable_2.2.zip)
+
+The portable edition has been tested successfully inside the PortableApps.com Platform. Extract the complete ZIP archive and either run `CodexCreditMonitorPortable.exe` directly or add its folder to PortableApps.com Platform.
+
+The portable package:
+
+- Follows the PortableApps directory structure.
+- Includes its launcher, AppInfo metadata, and application icon.
+- Keeps application settings in its own `Data` folder.
+- Creates no permanent Windows startup entry.
+- Can be moved as one complete folder.
+
+Both downloads are self-contained for 64-bit Windows and require no separate .NET Desktop Runtime.
 
 ## Settings and controls
 
-From the system tray you can open the dashboard, refresh immediately, change settings, view product information, or exit. Settings include language, alerts, sound, refresh interval, and — for the standard Windows build — launch at Windows sign-in.
+From the system tray you can open the dashboard, refresh immediately, change settings, view product information, or exit. Settings include language, alerts, sound, and refresh interval. The standard Windows edition can also launch at Windows sign-in.
 
-The Info window contains the current product description in Dutch or English. It scrolls gently and pauses when you point at the text.
+The Info window dynamically reads the bundled Dutch and English product description. It scrolls gently and pauses while you point at the text.
 
-## Download
+## Verify your download
 
-Download the current package from the [latest release](https://github.com/sibosays/CodexCreditMonitor/releases/latest):
+[Download SHA256SUMS.txt](https://github.com/sibosays/CodexCreditMonitor/releases/latest/download/SHA256SUMS.txt) and compare the SHA-256 value of your chosen package:
 
-1. Download CodexCreditMonitorPortable_2.2.zip.
-2. Extract the complete ZIP archive.
-3. Open the extracted CodexCreditMonitorPortable folder.
-4. Run CodexCreditMonitorPortable.exe directly or add it to the PortableApps.com Platform.
-
-## Verify the download
-
-Use SHA256SUMS.txt to verify the Portable ZIP. The current release contains the application package, checksum, and matching dashboard screenshot, in addition to GitHub's automatic source archives.
-
-## Privacy and scope
-
-Codex Credit Monitor reads local Codex session records only and sends no data anywhere. Cloud tasks, other devices, and delayed account updates may differ until those values are written locally.
+```text
+76CB93A9A283BA35770E24FE211B5214433C92E72EB60E112791D930B9990AB0  CodexCreditMonitorSetup_2.2_x64.msi
+0955DA69634EDDC3B38EB83E1B32190533EA0A15A0F8552F1AFD160A9DC1FF33  CodexCreditMonitorPortable_2.2.zip
+```
 
 ## What is new in v2.2?
 
-- Real 5-hour reset countdown and remaining allowance in the dashboard status area.
-- A professional product-focused Info view instead of change history.
+- Live 5-hour reset countdown and remaining allowance in the dashboard status area.
+- Professional product-focused Info view instead of change history.
 - Gentle automatic Info scrolling with pause-on-hover behavior.
-- Self-contained Windows and PortableApps delivery without a separate .NET dependency.
+- Self-contained MSI and PortableApps delivery without a separate .NET dependency.
+
+## Privacy and scope
+
+Codex Credit Monitor reads local Codex session records only and sends no data anywhere. Cloud tasks, activity on other devices, and delayed account updates may differ until those values are written locally.
 
 ---
 
 Concept and development: **C.S.K. (Simon) Bouwens**  
 © 2026 C.S.K. (Simon) Bouwens · Built with AI assistance
+
