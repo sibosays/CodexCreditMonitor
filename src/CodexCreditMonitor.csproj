@@ -10,6 +10,9 @@
     <RootNamespace>CodexCreditMonitor</RootNamespace>
     <ApplicationIcon>Assets\codex-credit-monitor.ico</ApplicationIcon>
     <Version>2.2.0</Version>
+    <!-- Ship a self-contained Windows app: no separate .NET Desktop Runtime is required. -->
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <SelfContained>true</SelfContained>
   </PropertyGroup>
   <ItemGroup>
     <Content Include="README.md" CopyToOutputDirectory="PreserveNewest" />

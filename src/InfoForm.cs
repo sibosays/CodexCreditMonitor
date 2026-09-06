@@ -1,7 +1,11 @@
+using System.Runtime.InteropServices;
+
 namespace CodexCreditMonitor;
 
 internal sealed class InfoForm : Form
 {
+    private const int EmLineScroll = 0x00B6;
+    private readonly System.Windows.Forms.Timer _scrollTimer = new() { Interval = 1_250 };
     public InfoForm(string version, string markdown)
     {
         Text = "Codex Credit Monitor · Info";
@@ -52,8 +56,36 @@ internal sealed class InfoForm : Form
         root.Controls.Add(copyright, 0, 2);
         root.Controls.Add(line, 0, 4);
         root.Controls.Add(content, 0, 5);
+        content.MouseEnter += (_, _) => _scrollTimer.Stop();
+        content.MouseLeave += (_, _) => StartDescriptionScroll(content);
+        Shown += (_, _) => StartDescriptionScroll(content);
+        FormClosed += (_, _) => _scrollTimer.Dispose();
+        _scrollTimer.Tick += (_, _) => ScrollDescription(content);
+
         Controls.Add(root);
     }
+
+    private void StartDescriptionScroll(RichTextBox content)
+    {
+        if (content.TextLength == 0) return;
+        var lastCharacter = content.GetPositionFromCharIndex(content.TextLength - 1);
+        if (lastCharacter.Y > content.ClientSize.Height - 18) _scrollTimer.Start();
+    }
+
+    private static void ScrollDescription(RichTextBox content)
+    {
+        var bottomIndex = content.GetCharIndexFromPosition(new Point(1, content.ClientSize.Height - 2));
+        if (bottomIndex >= content.TextLength - 1)
+        {
+            content.SelectionStart = 0;
+            content.ScrollToCaret();
+            return;
+        }
+        SendMessage(content.Handle, EmLineScroll, IntPtr.Zero, (IntPtr)1);
+    }
+
+    [DllImport("user32.dll")]
+    private static extern int SendMessage(IntPtr handle, int message, IntPtr wParam, IntPtr lParam);
 
     private static Label Header(string text, float size, FontStyle style, Color color) => new()
     {
