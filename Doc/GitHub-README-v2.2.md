@@ -72,8 +72,8 @@ The Info window dynamically reads the bundled Dutch and English product descript
 [Download SHA256SUMS.txt](https://github.com/sibosays/CodexCreditMonitor/releases/latest/download/SHA256SUMS.txt) and compare the SHA-256 value of your chosen package:
 
 ```text
-EFF06BC3BFFAA8EED86260A14873C7AD1A4AAE9530133B6E9F9575127F64FFC2  CodexCreditMonitorSetup_2.2_x64.msi
-908397C3D632C7E65486981C45F400C73C61B6320A65BA96ACAC6D4DD41F123D  CodexCreditMonitorPortable_2.2.zip
+96C8F6B57E9ACF331F4CBA8F62C4827DD668AFF838AC742A92C69AE02C7224A5  CodexCreditMonitorSetup_2.2_x64.msi
+04FE3ED45DE377C21BC24644A3FEF50C903E664828A0D5918909F022F8B4277B  CodexCreditMonitorPortable_2.2.zip
 ```
 
 ## What is new in v2.2?
