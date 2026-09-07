@@ -2,7 +2,7 @@
 
 ## Stable baseline
 
-v2.2 is the current stable baseline. Its implementation, product documentation, screenshot, MSI, PortableApps package, and checksums are centrally archived in this project.
+v2.2 is the current stable baseline, formally closed and paused on 7 September 2026 after successful live publication verification. Its implementation, product documentation, screenshot, MSI, PortableApps package, and checksums are centrally archived in this project.
 
 ## Release policy
 
@@ -14,7 +14,7 @@ v2.2 is the current stable baseline. Its implementation, product documentation, 
 
 ## Next version
 
-Future product work belongs to the next major version and starts only after v2.2 has been formally closed.
+Future product changes belong exclusively to v3. v2.2 is closed and paused; no further implementation changes are planned under this version.
 
 ## Changeset document convention
 
