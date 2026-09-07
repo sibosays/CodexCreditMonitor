@@ -12,9 +12,9 @@ At a glance, you can see:
 
 - Your available credit balance.
 - Usage in the active 5-hour window and the weekly window.
-- The live 5-hour reset countdown and remaining allowance.
+- The live 5-hour reset countdown and remaining allowance inside the credit card.
 - Today's model activity, processed tokens, and recent sessions.
-- Locally observed credit-use pace and optional alerts.
+- Locally observed credit-use pace and optional alerts, with the last reliable pace retained during quiet periods and after restarts.
 
 ## How it works
 
@@ -43,7 +43,7 @@ Choose the package that matches how you use Windows:
 
 [Download CodexCreditMonitorSetup_2.2_x64.msi](https://github.com/sibosays/CodexCreditMonitor/releases/latest/download/CodexCreditMonitorSetup_2.2_x64.msi)
 
-Use the MSI for a conventional 64-bit Windows installation. It installs the self-contained desktop application in Program Files and adds a Codex Credit Monitor shortcut to the Start menu.
+Use the MSI for a conventional 64-bit Windows installation. Windows requests administrator approval, then installs the self-contained desktop application in Program Files and adds a Codex Credit Monitor shortcut to the Start menu.
 
 ### PortableApps package (ZIP)
 
@@ -72,16 +72,18 @@ The Info window dynamically reads the bundled Dutch and English product descript
 [Download SHA256SUMS.txt](https://github.com/sibosays/CodexCreditMonitor/releases/latest/download/SHA256SUMS.txt) and compare the SHA-256 value of your chosen package:
 
 ```text
-76CB93A9A283BA35770E24FE211B5214433C92E72EB60E112791D930B9990AB0  CodexCreditMonitorSetup_2.2_x64.msi
-0955DA69634EDDC3B38EB83E1B32190533EA0A15A0F8552F1AFD160A9DC1FF33  CodexCreditMonitorPortable_2.2.zip
+96C8F6B57E9ACF331F4CBA8F62C4827DD668AFF838AC742A92C69AE02C7224A5  CodexCreditMonitorSetup_2.2_x64.msi
+04FE3ED45DE377C21BC24644A3FEF50C903E664828A0D5918909F022F8B4277B  CodexCreditMonitorPortable_2.2.zip
 ```
 
 ## What is new in v2.2?
 
-- Live 5-hour reset countdown and remaining allowance in the dashboard status area.
+- Live 5-hour reset countdown and remaining allowance inside the credit card.
+- Reliable usage-pace persistence and recovery from recent local history.
 - Professional product-focused Info view instead of change history.
 - Gentle automatic Info scrolling with pause-on-hover behavior.
 - Self-contained MSI and PortableApps delivery without a separate .NET dependency.
+- Rebuilt and CRC-verified PortableApps launcher for reliable platform startup.
 
 ## Privacy and scope
 
