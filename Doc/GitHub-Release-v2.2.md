@@ -6,7 +6,7 @@ Codex Credit Monitor is a lightweight, privacy-focused Windows system-tray appli
 
 ## Choose your download
 
-- **Windows Installer:** `CodexCreditMonitorSetup_2.2_x64.msi` — installs the self-contained 64-bit application in Program Files and adds a Start menu shortcut.
+- **Windows Installer:** `CodexCreditMonitorSetup_2.2_x64.msi` — requests administrator approval, installs the self-contained 64-bit application in Program Files, and adds a Start menu shortcut.
 - **PortableApps package:** `CodexCreditMonitorPortable_2.2.zip` — a complete portable package tested successfully inside the PortableApps.com Platform. It keeps settings in its own Data folder and creates no permanent startup entry.
 
 Neither edition requires a separate .NET Desktop Runtime.
@@ -28,6 +28,7 @@ Neither edition requires a separate .NET Desktop Runtime.
 - Added a conventional MSI alongside the PortableApps-tested ZIP.
 - Kept both deliveries fully self-contained to prevent .NET runtime dependency errors.
 - Completed seven localization, adaptive-layout, scrolling, limit-status, usage-pace, and process-lifecycle corrections without changing the v2.2 version number.
+- Rebuilt the PortableApps launcher with the official generator and verified its CRC and clean startup path.
 
 ## Privacy
 

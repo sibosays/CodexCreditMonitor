@@ -43,7 +43,7 @@ Choose the package that matches how you use Windows:
 
 [Download CodexCreditMonitorSetup_2.2_x64.msi](https://github.com/sibosays/CodexCreditMonitor/releases/latest/download/CodexCreditMonitorSetup_2.2_x64.msi)
 
-Use the MSI for a conventional 64-bit Windows installation. It installs the self-contained desktop application in Program Files and adds a Codex Credit Monitor shortcut to the Start menu.
+Use the MSI for a conventional 64-bit Windows installation. Windows requests administrator approval, then installs the self-contained desktop application in Program Files and adds a Codex Credit Monitor shortcut to the Start menu.
 
 ### PortableApps package (ZIP)
 
@@ -72,8 +72,8 @@ The Info window dynamically reads the bundled Dutch and English product descript
 [Download SHA256SUMS.txt](https://github.com/sibosays/CodexCreditMonitor/releases/latest/download/SHA256SUMS.txt) and compare the SHA-256 value of your chosen package:
 
 ```text
-76CB93A9A283BA35770E24FE211B5214433C92E72EB60E112791D930B9990AB0  CodexCreditMonitorSetup_2.2_x64.msi
-0955DA69634EDDC3B38EB83E1B32190533EA0A15A0F8552F1AFD160A9DC1FF33  CodexCreditMonitorPortable_2.2.zip
+EFF06BC3BFFAA8EED86260A14873C7AD1A4AAE9530133B6E9F9575127F64FFC2  CodexCreditMonitorSetup_2.2_x64.msi
+908397C3D632C7E65486981C45F400C73C61B6320A65BA96ACAC6D4DD41F123D  CodexCreditMonitorPortable_2.2.zip
 ```
 
 ## What is new in v2.2?
@@ -83,6 +83,7 @@ The Info window dynamically reads the bundled Dutch and English product descript
 - Professional product-focused Info view instead of change history.
 - Gentle automatic Info scrolling with pause-on-hover behavior.
 - Self-contained MSI and PortableApps delivery without a separate .NET dependency.
+- Rebuilt and CRC-verified PortableApps launcher for reliable platform startup.
 
 ## Privacy and scope
 

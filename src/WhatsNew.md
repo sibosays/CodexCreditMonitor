@@ -8,6 +8,7 @@
 - Herstelt Engelse tooltips, adaptieve meertalige instellingen, het vaste compacte dashboardformaat en vloeiend continu Info-scrollen.
 - Bewaart het laatst geldige verbruikstempo, herstelt dit bij een rustige periode of herstart uit maximaal acht dagen lokale historie, negeert ongeldige negatieve metingen en vernieuwt alleen met betrouwbare achtergronddata.
 - Ontkoppelt de tray-app van het startende ChatGPT/Codex-proces zodat de monitor zelfstandig actief blijft.
+- Herbouwt de PortableApps-launcher met geldige integriteitscontrole en een startwijze die past bij de zelfstandige tray-app.
 
 ## v2.1.1
 
@@ -56,6 +57,7 @@ Het dashboard open je vanuit het systeemvak. Instellingen, handmatig vernieuwen 
 - Restores English tooltips, adaptive bilingual Settings layout, the fixed compact dashboard size, and smooth continuous Info scrolling.
 - Preserves the last valid usage pace, recovers it after a quiet period or restart from up to eight days of local history, rejects invalid negative measurements, and replaces it only with reliable background data.
 - Detaches the tray application from its launching ChatGPT/Codex process so the monitor remains independently active.
+- Rebuilds the PortableApps launcher with a valid integrity check and startup behavior suited to the independent tray application.
 
 ## v2.1.1
 
