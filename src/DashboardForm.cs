@@ -370,7 +370,8 @@ internal sealed class DashboardForm : Form
         ShowWarningIfNeeded(usage);
         ShowLowCreditWarningIfNeeded(usage);
         var creditSpendRate = CreditSpendRateDetector.Analyze(usage.CreditBalanceHistory);
-        UpdateCreditPace(usage, creditSpendRate);
+        var latestValidCreditSpendRate = creditSpendRate ?? CreditSpendRateDetector.AnalyzeLatestValid(usage.CreditBalanceHistory);
+        UpdateCreditPace(usage, latestValidCreditSpendRate);
         ShowRapidCreditSpendWarningIfNeeded(creditSpendRate);
         FitToContent();
     }

@@ -15,17 +15,19 @@ Neither edition requires a separate .NET Desktop Runtime.
 
 - Available credit balance in a compact dashboard.
 - Current 5-hour-window usage, weekly usage, and remaining allowance.
-- A live countdown to the next 5-hour reset.
+- A live countdown to the next 5-hour reset inside the credit card.
 - Today's model activity, processed tokens, and recent sessions.
 - Contextual **Add credits** and **Use credits** actions that appear only when relevant.
 - Optional local alerts for usage thresholds, low credits, and unusually rapid credit use.
+- Persistence and recovery of the last reliable local credit-use pace during quiet periods and after restarts.
 
 ## New in v2.2
 
-- Added the real 5-hour reset countdown and remaining allowance to the dashboard status area.
+- Added the real 5-hour reset countdown and remaining allowance inside the credit card.
 - Reworked Info into a professional product description with gentle automatic scrolling and pause on hover.
 - Added a conventional MSI alongside the PortableApps-tested ZIP.
 - Kept both deliveries fully self-contained to prevent .NET runtime dependency errors.
+- Completed seven localization, adaptive-layout, scrolling, limit-status, usage-pace, and process-lifecycle corrections without changing the v2.2 version number.
 
 ## Privacy
 

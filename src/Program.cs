@@ -522,6 +522,19 @@ internal static class Program
             new CreditBalanceSample(now.AddSeconds(-20), 100m),
             new CreditBalanceSample(now, 1m)
         ]);
+        var recoveredHistoricalRate = CreditSpendRateDetector.AnalyzeLatestValid(
+        [
+            new CreditBalanceSample(now.AddHours(-4), 80m),
+            new CreditBalanceSample(now.AddHours(-3).AddMinutes(-30), 76m),
+            new CreditBalanceSample(now.AddMinutes(-30), 76m),
+            new CreditBalanceSample(now, 76m)
+        ]);
+        var historicalRateAcrossTopUp = CreditSpendRateDetector.AnalyzeLatestValid(
+        [
+            new CreditBalanceSample(now.AddHours(-2), 20m),
+            new CreditBalanceSample(now.AddHours(-1), 250m),
+            new CreditBalanceSample(now, 250m)
+        ]);
         var persisted = System.Text.Json.JsonSerializer.Deserialize<MonitorSettings>(
             System.Text.Json.JsonSerializer.Serialize(new MonitorSettings
             {
@@ -534,6 +547,8 @@ internal static class Program
             afterTopUp?.AlertLevel != CreditSpendAlertLevel.Rapid ||
             invalidNegativeBalance is not null ||
             invalidShortSpike is not null ||
+            recoveredHistoricalRate?.CreditsPerHour != 8m ||
+            historicalRateAcrossTopUp is not null ||
             persisted?.LastValidCreditsPerHour != 12.5m ||
             persisted.LastCreditPaceMeasuredAt != now)
             throw new InvalidOperationException("Credit pace detection verification failed.");

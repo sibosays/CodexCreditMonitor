@@ -124,7 +124,10 @@ internal static class UsageReader
                 todaySessions.Sum(s => s.Tokens),
                 todaySessions.Take(5).ToList(),
                 creditBalanceHistory
-                    .Where(sample => sample.Timestamp >= DateTimeOffset.Now.AddHours(-2))
+                    // Keep enough local history to recover the newest valid pace after a
+                    // quiet period or restart. The detector itself still measures at most
+                    // a two-hour interval and refuses to cross a top-up boundary.
+                    .Where(sample => sample.Timestamp >= DateTimeOffset.Now.AddDays(-8))
                     .OrderBy(sample => sample.Timestamp)
                     .ToList(),
                 newest.LastUpdate is null ? "Nog geen gebruiksgegevens gevonden." : null);

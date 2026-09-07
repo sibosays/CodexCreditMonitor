@@ -12,9 +12,9 @@ At a glance, you can see:
 
 - Your available credit balance.
 - Usage in the active 5-hour window and the weekly window.
-- The live 5-hour reset countdown and remaining allowance.
+- The live 5-hour reset countdown and remaining allowance inside the credit card.
 - Today's model activity, processed tokens, and recent sessions.
-- Locally observed credit-use pace and optional alerts.
+- Locally observed credit-use pace and optional alerts, with the last reliable pace retained during quiet periods and after restarts.
 
 ## How it works
 
@@ -78,7 +78,8 @@ The Info window dynamically reads the bundled Dutch and English product descript
 
 ## What is new in v2.2?
 
-- Live 5-hour reset countdown and remaining allowance in the dashboard status area.
+- Live 5-hour reset countdown and remaining allowance inside the credit card.
+- Reliable usage-pace persistence and recovery from recent local history.
 - Professional product-focused Info view instead of change history.
 - Gentle automatic Info scrolling with pause-on-hover behavior.
 - Self-contained MSI and PortableApps delivery without a separate .NET dependency.
