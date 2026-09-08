@@ -25,6 +25,9 @@
   <data name="Dashboard.FiveHourReset" xml:space="preserve"><value>5-uurslimiet · reset over {0} · {1}% resterend</value></data>
   <data name="Dashboard.FiveHourWaiting" xml:space="preserve"><value>5-uurslimiet · actuele resetgegevens laden…</value></data>
   <data name="Dashboard.FiveHourRefreshing" xml:space="preserve"><value>5-uurslimiet · wachten op het volgende venster…</value></data>
+  <data name="Dashboard.BundleExhausted" xml:space="preserve"><value>BUNDEL OPGEBRUIKT · credits worden nu gebruikt</value></data>
+  <data name="Dashboard.UsagePace" xml:space="preserve"><value>VERBRUIKSTEMPO · {0} credits/uur</value></data>
+  <data name="Dashboard.UsagePaceCollecting" xml:space="preserve"><value>VERBRUIKSTEMPO · lokale metingen worden verzameld</value></data>
   <data name="Info.Concept" xml:space="preserve"><value>Concept &amp; Realisatie: C.S.K. (Simon) Bouwens</value></data>
   <data name="Info.Ai" xml:space="preserve"><value>© 2026 C.S.K. (Simon) Bouwens · Gebouwd met AI-ondersteuning</value></data>
 </root>

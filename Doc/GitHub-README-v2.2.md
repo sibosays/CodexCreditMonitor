@@ -15,6 +15,7 @@ At a glance, you can see:
 - The live 5-hour reset countdown and remaining allowance inside the credit card.
 - Today's model activity, processed tokens, and recent sessions.
 - Locally observed credit-use pace and optional alerts, with the last reliable pace retained during quiet periods and after restarts.
+- The exhausted-allowance status and the credit-use pace remain visible together when credits are in use.
 
 ## How it works
 
@@ -80,6 +81,7 @@ The Info window dynamically reads the bundled Dutch and English product descript
 
 - Live 5-hour reset countdown and remaining allowance inside the credit card.
 - Reliable usage-pace persistence and recovery from recent local history.
+- Credit-use pace remains visible alongside the exhausted-allowance status.
 - Professional product-focused Info view instead of change history.
 - Gentle automatic Info scrolling with pause-on-hover behavior.
 - Self-contained MSI and PortableApps delivery without a separate .NET dependency.

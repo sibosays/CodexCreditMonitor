@@ -75,12 +75,14 @@ internal static class Program
             RenderInfoPreview();
             return;
         }
-        if (commandLine.Contains("--render-credit-actions", StringComparer.OrdinalIgnoreCase))
+        if (commandLine.Contains("--render-credit-actions", StringComparer.OrdinalIgnoreCase) ||
+            commandLine.Contains("--render-credit-actions-nl", StringComparer.OrdinalIgnoreCase))
         {
             // The public release image is deliberately English, independent of
             // the Windows display language or a user's saved app preference.
-            Ui.SetLanguage("en");
-            RenderDashboardPreview(34m, 100d);
+            var language = commandLine.Contains("--render-credit-actions-nl", StringComparer.OrdinalIgnoreCase) ? "nl" : "en";
+            Ui.SetLanguage(language);
+            RenderDashboardPreview(34m, 100d, language == "nl" ? "dashboard-preview-nl.png" : "dashboard-preview.png");
             return;
         }
         if (commandLine.Contains("--preview-info", StringComparer.OrdinalIgnoreCase))
@@ -419,63 +421,37 @@ internal static class Program
 
     private static bool ShouldDetachFromParent(string[] commandLine)
     {
-        if (commandLine.Contains("--ccm-independent", StringComparer.OrdinalIgnoreCase)) return false;
         if (commandLine.Any(argument => argument.StartsWith("--preview-", StringComparison.OrdinalIgnoreCase) ||
                                         argument.StartsWith("--render-", StringComparison.OrdinalIgnoreCase) ||
                                         argument.StartsWith("--verify-", StringComparison.OrdinalIgnoreCase))) return false;
-        try
-        {
-            return IsProcessInJob(Process.GetCurrentProcess().Handle, IntPtr.Zero, out var inJob) && inJob;
-        }
-        catch
-        {
-            return false;
-        }
+        return !IndependentLaunch.IsIndependent();
     }
 
     private static bool TryStartIndependent(string[] commandLine)
     {
-        var executable = Environment.ProcessPath;
-        if (string.IsNullOrWhiteSpace(executable)) return false;
-        object? shell = null;
         try
         {
-            var arguments = commandLine.Skip(1).Where(argument => !argument.Equals("--ccm-independent", StringComparison.OrdinalIgnoreCase)).ToList();
-            arguments.Add("--ccm-independent");
+            // A marker is not evidence of independence. Refuse a second hand-off
+            // if Windows did not produce the verified shell-owned process.
+            if (commandLine.Contains(IndependentLaunch.Marker, StringComparer.OrdinalIgnoreCase))
+                throw new InvalidOperationException("Windows could not start an independent monitor process.");
+            var executable = Environment.ProcessPath ?? throw new InvalidOperationException("Application path unavailable.");
+            var arguments = commandLine.Skip(1).ToList();
+            arguments.Add(IndependentLaunch.Marker);
             var portableData = Environment.GetEnvironmentVariable("CODEX_CREDIT_MONITOR_DATA_DIR");
             if (!string.IsNullOrWhiteSpace(portableData))
                 arguments.Add("--ccm-data=" + Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(portableData)));
-
-            var shellType = Type.GetTypeFromProgID("Shell.Application");
-            if (shellType is null) return false;
-            shell = Activator.CreateInstance(shellType);
-            if (shell is null) return false;
-            var argumentLine = string.Join(" ", arguments.Select(QuoteCommandLineArgument));
-            shellType.InvokeMember(
-                "ShellExecute",
-                System.Reflection.BindingFlags.InvokeMethod,
-                null,
-                shell,
-                [executable, argumentLine, Path.GetDirectoryName(executable) ?? string.Empty, string.Empty, 0]);
-            return true;
+            IndependentLaunch.Start(executable, arguments, Path.GetDirectoryName(executable)!);
         }
-        catch
+        catch (Exception exception)
         {
-            // Normal Explorer/Startup launches are already independent. If the shell broker
-            // is unavailable, continuing here is safer than preventing the monitor from starting.
-            return false;
+            MessageBox.Show(
+                "Codex Credit Monitor could not start independently. Open the app directly from Windows Explorer.\n\n" + exception.Message,
+                AppTitle, MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
-        finally
-        {
-            if (shell is not null && Marshal.IsComObject(shell)) Marshal.FinalReleaseComObject(shell);
-        }
+        // Never silently run inside the launcher's job after a failed hand-off.
+        return true;
     }
-
-    private static string QuoteCommandLineArgument(string argument)
-        => argument.Length > 0 && !argument.Any(char.IsWhiteSpace) && !argument.Contains('"')
-            ? argument
-            : "\"" + argument.Replace("\\", "\\\\").Replace("\"", "\\\"") + "\"";
-
     private static void RestorePortableDataDirectory(IEnumerable<string> commandLine)
     {
         const string prefix = "--ccm-data=";
@@ -554,7 +530,7 @@ internal static class Program
             throw new InvalidOperationException("Credit pace detection verification failed.");
     }
 
-    private static void RenderDashboardPreview(decimal balance, double weekPercent)
+    private static void RenderDashboardPreview(decimal balance, double weekPercent, string outputFileName = "dashboard-preview.png")
     {
         using var preview = new DashboardForm(new MonitorSettings());
         // A borderless surface makes this an exact dashboard capture rather
@@ -573,7 +549,7 @@ internal static class Program
         // clipping that DrawToBitmap can produce at scaled Windows DPI.
         using var image = new Bitmap(preview.ClientSize.Width, preview.ClientSize.Height);
         preview.DrawToBitmap(image, new Rectangle(Point.Empty, preview.ClientSize));
-        image.Save(Path.Combine(AppContext.BaseDirectory, "dashboard-preview.png"));
+        image.Save(Path.Combine(AppContext.BaseDirectory, outputFileName));
     }
 
     private static void RenderSettingsPreview(string language)
@@ -688,7 +664,5 @@ internal static class Program
     [DllImport("shell32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
     private static extern int SetCurrentProcessExplicitAppUserModelID(string appID);
 
-    [DllImport("kernel32.dll", SetLastError = true)]
-    [return: MarshalAs(UnmanagedType.Bool)]
-    private static extern bool IsProcessInJob(IntPtr processHandle, IntPtr jobHandle, [MarshalAs(UnmanagedType.Bool)] out bool result);
+
 }

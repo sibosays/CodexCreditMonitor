@@ -8,6 +8,7 @@ Codex Credit Monitor is een lichte Windows-systeemvakapp voor overzichtelijk lok
 - Toont beschikbaar credittegoed, gebruik van het actuele 5-uursvenster en het weekverbruik.
 - Laat permanent in de tegoedkaart zien wanneer het 5-uursvenster opnieuw beschikbaar is en welk percentage nog resteert.
 - Houdt de laatst geldige meting van het creditverbruikstempo zichtbaar, herstelt deze uit recente lokale historie en controleert nieuwe metingen op de achtergrond.
+- Houdt bij een opgebruikte weekbundel de bundelstatus én het verbruikstempo in credits per uur zichtbaar.
 - Geeft inzicht in modelmomenten, verwerkte tokens en de recente sessies van vandaag.
 - Toont automatische opwaardering uitsluitend als context; de app wijzigt ChatGPT nooit zelf.
 
@@ -35,6 +36,7 @@ Codex Credit Monitor is a lightweight Windows system-tray application for clear 
 - Shows available credit balance, current 5-hour-window usage, and weekly usage.
 - Permanently shows when the 5-hour window becomes available again and how much remains inside the credit card.
 - Keeps the last reliable local credit-use pace visible and recovers it from recent local history after quiet periods or restarts.
+- Keeps both the exhausted-allowance status and the credit-use pace in credits per hour visible when the weekly allowance is exhausted.
 - Provides insight into model events, processed tokens, and today's recent sessions.
 - Shows automatic recharge as context only; the app never changes ChatGPT on its own.
 

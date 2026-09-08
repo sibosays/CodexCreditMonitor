@@ -27,7 +27,8 @@ Neither edition requires a separate .NET Desktop Runtime.
 - Reworked Info into a professional product description with gentle automatic scrolling and pause on hover.
 - Added a conventional MSI alongside the PortableApps-tested ZIP.
 - Kept both deliveries fully self-contained to prevent .NET runtime dependency errors.
-- Completed seven localization, adaptive-layout, scrolling, limit-status, usage-pace, and process-lifecycle corrections without changing the v2.2 version number.
+- Completed eight localization, adaptive-layout, scrolling, limit-status, usage-pace, and process-lifecycle corrections without changing the v2.2 version number.
+- Kept the credit-use pace visible beside the exhausted-allowance status, so active credit-backed usage remains understandable at a glance.
 - Rebuilt the PortableApps launcher with the official generator and verified its CRC and clean startup path.
 
 ## Privacy

@@ -12,10 +12,13 @@ internal sealed class DashboardForm : Form
     private readonly Label _balance = NewLabel(27, FontStyle.Bold, Color.White);
     private readonly Panel _autoRechargeBadge = new() { BackColor = Color.Transparent, Visible = false };
     private readonly Label _balanceNote = NewLabel(9, FontStyle.Bold, Color.FromArgb(191, 231, 245));
+    private readonly Panel _bundleStatusBadge = new() { BackColor = Color.FromArgb(74, 47, 60), Visible = false };
+    private readonly Label _bundleStatusNote = NewLabel(9, FontStyle.Bold, Color.FromArgb(255, 181, 184));
     private readonly Panel _creditPaceBadge = new() { BackColor = Color.Transparent, Visible = false };
     private readonly Label _creditPaceNote = NewLabel(9, FontStyle.Bold, Color.FromArgb(235, 204, 136));
     private readonly Label _updated = NewLabel(10, FontStyle.Regular, Color.FromArgb(155, 172, 194));
     private readonly Label _fiveHourReset = NewLabel(9, FontStyle.Regular, Color.FromArgb(177, 198, 223));
+    private readonly Panel _balanceCard = Card(182);
     private readonly UsageBar _fiveHour = new(Ui.S("Dashboard.CurrentWindow"));
     private readonly UsageBar _week = new(Ui.S("Dashboard.WeeklyUsage"));
     private readonly Label _todayRequests = NewLabel(17, FontStyle.Bold, Color.White);
@@ -124,7 +127,6 @@ internal sealed class DashboardForm : Form
         _refreshBanner.Controls.Add(_refreshBannerText);
         header.Controls.AddRange([title, _updated, _addCredits, _useCredits, _infoButton, _settingsButton, _refreshButton, _refreshBanner]);
 
-        var balanceCard = Card(182);
         var balanceCaption = NewLabel(11, FontStyle.Regular, Color.FromArgb(168, 185, 205));
         balanceCaption.Name = "balanceCaption";
         balanceCaption.Text = Ui.S("Dashboard.AvailableBalance");
@@ -142,13 +144,19 @@ internal sealed class DashboardForm : Form
         _fiveHourReset.Location = new Point(25, 116);
         _fiveHourReset.Size = new Size(350, 18);
         _fiveHourReset.AutoEllipsis = true;
+        _bundleStatusBadge.Location = new Point(16, 141);
+        _bundleStatusBadge.Size = new Size(370, 23);
+        _bundleStatusBadge.Padding = new Padding(9, 3, 8, 2);
+        _bundleStatusNote.Dock = DockStyle.Fill;
+        _bundleStatusNote.TextAlign = ContentAlignment.MiddleLeft;
+        _bundleStatusBadge.Controls.Add(_bundleStatusNote);
         _creditPaceBadge.Location = new Point(16, 141);
         _creditPaceBadge.Size = new Size(370, 23);
         _creditPaceBadge.Padding = new Padding(9, 3, 8, 2);
         _creditPaceNote.Dock = DockStyle.Fill;
         _creditPaceNote.TextAlign = ContentAlignment.MiddleLeft;
         _creditPaceBadge.Controls.Add(_creditPaceNote);
-        balanceCard.Controls.AddRange([balanceCaption, _balance, _autoRechargeBadge, _fiveHourReset, _creditPaceBadge]);
+        _balanceCard.Controls.AddRange([balanceCaption, _balance, _autoRechargeBadge, _fiveHourReset, _bundleStatusBadge, _creditPaceBadge]);
 
         var bars = Card(142);
         _fiveHour.Location = new Point(17, 14);
@@ -176,7 +184,7 @@ internal sealed class DashboardForm : Form
         sessionsCard.Controls.AddRange([sessionsHeader, _sessions]);
 
         var stack = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.TopDown, WrapContents = false, AutoScroll = false, BackColor = Color.Transparent, Padding = new Padding(0) };
-        stack.Controls.AddRange([header, Spacer(6), balanceCard, Spacer(12), bars, Spacer(12), metrics, Spacer(6), sessionsCard]);
+        stack.Controls.AddRange([header, Spacer(6), _balanceCard, Spacer(12), bars, Spacer(12), metrics, Spacer(6), sessionsCard]);
         root.Controls.Add(stack);
         FitToContent();
 
@@ -481,14 +489,12 @@ internal sealed class DashboardForm : Form
 
     private void UpdateCreditPace(UsageSummary usage, CreditSpendRate? rate)
     {
+        var includedAllowanceExhausted = usage.WeekPercent is >= 100d;
+        _bundleStatusBadge.Visible = includedAllowanceExhausted;
+        _bundleStatusNote.Text = Ui.S("Dashboard.BundleExhausted");
+        _creditPaceBadge.Location = new Point(16, includedAllowanceExhausted ? 167 : 141);
+        _balanceCard.Height = includedAllowanceExhausted ? 208 : 182;
         _creditPaceBadge.Visible = true;
-        if (usage.WeekPercent is >= 100)
-        {
-            _creditPaceBadge.BackColor = Color.FromArgb(74, 47, 60);
-            _creditPaceNote.ForeColor = Color.FromArgb(255, 181, 184);
-            _creditPaceNote.Text = Ui.T("BUNDEL OPGEBRUIKT · credits worden nu gebruikt", "INCLUDED ALLOWANCE EXHAUSTED · credits are now in use");
-            return;
-        }
 
         if (rate is { CreditsPerHour: >= 0m } && rate.CreditsPerHour <= CreditSpendRateDetector.MaxCredibleCreditsPerHour)
         {
@@ -506,8 +512,8 @@ internal sealed class DashboardForm : Form
             ? Color.FromArgb(255, 181, 184)
             : Color.FromArgb(235, 204, 136);
         _creditPaceNote.Text = displayedRate is decimal validRate
-            ? Ui.T($"VERBRUIKSTEMPO · {validRate:N1} credits/uur", $"USAGE PACE · {validRate:N1} credits/hour")
-            : Ui.T("VERBRUIKSTEMPO · lokale metingen worden verzameld", "USAGE PACE · collecting local measurements");
+            ? string.Format(Ui.S("Dashboard.UsagePace"), validRate.ToString("N1"))
+            : Ui.S("Dashboard.UsagePaceCollecting");
     }
 
     private void UpdateSessions(IReadOnlyList<SessionUsage> sessions)

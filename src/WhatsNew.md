@@ -7,7 +7,8 @@
 - Info toont voortaan uitsluitend de professionele, actuele productbeschrijving uit `README.md`. Wijzigingsgeschiedenis blijft in dit afzonderlijke What's New-bronbestand.
 - Herstelt Engelse tooltips, adaptieve meertalige instellingen, het vaste compacte dashboardformaat en vloeiend continu Info-scrollen.
 - Bewaart het laatst geldige verbruikstempo, herstelt dit bij een rustige periode of herstart uit maximaal acht dagen lokale historie, negeert ongeldige negatieve metingen en vernieuwt alleen met betrouwbare achtergronddata.
-- Ontkoppelt de tray-app van het startende ChatGPT/Codex-proces zodat de monitor zelfstandig actief blijft.
+- Toont bij een opgebruikte weekbundel zowel de aparte bundelstatus als het actuele of laatst betrouwbare verbruikstempo in credits per uur; de waarschuwing vervangt die nuttige informatie niet meer.
+- Start de tray-app met Windows Verkenner als ouderproces en controleert vóór uitvoering dat er geen Windows-jobkoppeling meer is. Praktijktest bij volledig afsluiten van ChatGPT wacht op gebruikerscontrole.
 - Herbouwt de PortableApps-launcher met geldige integriteitscontrole en een startwijze die past bij de zelfstandige tray-app.
 
 ## v2.1.1
@@ -56,6 +57,7 @@ Het dashboard open je vanuit het systeemvak. Instellingen, handmatig vernieuwen 
 - Info now shows only the professional, current product description from `README.md`. Change history remains in this separate What's New source file.
 - Restores English tooltips, adaptive bilingual Settings layout, the fixed compact dashboard size, and smooth continuous Info scrolling.
 - Preserves the last valid usage pace, recovers it after a quiet period or restart from up to eight days of local history, rejects invalid negative measurements, and replaces it only with reliable background data.
+- When the weekly allowance is exhausted, shows both the separate allowance status and the current or last reliable credit-use pace in credits per hour; the warning no longer replaces that useful information.
 - Detaches the tray application from its launching ChatGPT/Codex process so the monitor remains independently active.
 - Rebuilds the PortableApps launcher with a valid integrity check and startup behavior suited to the independent tray application.
 
