@@ -15,6 +15,7 @@ At a glance, you can see:
 - The live 5-hour reset countdown and remaining allowance inside the credit card.
 - Today's model activity, processed tokens, and recent sessions.
 - Locally observed credit-use pace and optional alerts, with the last reliable pace retained during quiet periods and after restarts.
+- The exhausted-allowance status and the credit-use pace remain visible together when credits are in use.
 
 ## How it works
 
@@ -72,14 +73,15 @@ The Info window dynamically reads the bundled Dutch and English product descript
 [Download SHA256SUMS.txt](https://github.com/sibosays/CodexCreditMonitor/releases/latest/download/SHA256SUMS.txt) and compare the SHA-256 value of your chosen package:
 
 ```text
-96C8F6B57E9ACF331F4CBA8F62C4827DD668AFF838AC742A92C69AE02C7224A5  CodexCreditMonitorSetup_2.2_x64.msi
-04FE3ED45DE377C21BC24644A3FEF50C903E664828A0D5918909F022F8B4277B  CodexCreditMonitorPortable_2.2.zip
+9C19B3EACD2D858E7FB5C71E1C2E4BF5B358425FEC915BC7133F639FF7B71E5C  CodexCreditMonitorSetup_2.2_x64.msi
+A7B5018F26E24E3A783D98D26F3902C76CE2A7437354CD4B19EDD5DD40D3FE4B  CodexCreditMonitorPortable_2.2.zip
 ```
 
 ## What is new in v2.2?
 
 - Live 5-hour reset countdown and remaining allowance inside the credit card.
 - Reliable usage-pace persistence and recovery from recent local history.
+- Credit-use pace remains visible alongside the exhausted-allowance status.
 - Professional product-focused Info view instead of change history.
 - Gentle automatic Info scrolling with pause-on-hover behavior.
 - Self-contained MSI and PortableApps delivery without a separate .NET dependency.
