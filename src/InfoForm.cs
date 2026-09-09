@@ -40,8 +40,13 @@ internal sealed class InfoForm : Form
         var copyright = Header(Ui.S("Info.Ai"), 9, FontStyle.Italic, Color.FromArgb(154, 177, 207));
         var line = new Panel { Dock = DockStyle.Fill, Height = 1, BackColor = Color.FromArgb(59, 79, 104), Margin = Padding.Empty };
         var displayText = ToDisplayText(markdown);
-        var loopGap = string.Concat(Enumerable.Repeat(Environment.NewLine, 6));
-        _secondCopyStart = displayText.Length + loopGap.Length;
+        // A quiet divider separates the looping copies without introducing a
+        // distracting label or a large blank block.
+        var loopGap = string.Concat(Environment.NewLine, Environment.NewLine,
+            new string('─', 38), Environment.NewLine, Environment.NewLine);
+        var restartHeading = Ui.T("PRODUCTINFORMATIE", "PRODUCT INFORMATION");
+        var firstCopy = restartHeading + Environment.NewLine + displayText;
+        _secondCopyStart = firstCopy.Length + loopGap.Length;
         var content = new RichTextBox
         {
             Dock = DockStyle.Fill,
@@ -50,12 +55,17 @@ internal sealed class InfoForm : Form
             BackColor = BackColor,
             ForeColor = Color.FromArgb(221, 232, 246),
             Font = new Font("Segoe UI", 10),
-            Text = displayText + loopGap + displayText,
+            Text = firstCopy + loopGap + restartHeading + Environment.NewLine + displayText,
             DetectUrls = true,
             ScrollBars = RichTextBoxScrollBars.Vertical,
             Margin = new Padding(0, 16, 0, 0),
             TabStop = false
         };
+        content.Select(0, restartHeading.Length);
+        content.SelectionFont = new Font(content.Font, FontStyle.Bold);
+        content.Select(_secondCopyStart, restartHeading.Length);
+        content.SelectionFont = new Font(content.Font, FontStyle.Bold);
+        content.Select(0, 0);
 
         root.Controls.Add(product, 0, 0);
         root.Controls.Add(author, 0, 1);

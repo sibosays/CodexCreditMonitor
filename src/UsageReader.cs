@@ -27,6 +27,14 @@ internal sealed record UsageLimitSnapshot(
 
 internal static class UsageReader
 {
+    // The dashboard only needs two hours of balance changes to calculate its pace.
+    // Reading eight days of large rollout logs delayed an alert until it was no
+    // longer actionable.
+    private static readonly TimeSpan LiveHistoryWindow = TimeSpan.FromHours(2);
+    private static readonly TimeSpan LatestSnapshotWindow = TimeSpan.FromDays(8);
+    private const int MaximumQuickFiles = 16;
+    private const int QuickReadBytesPerFile = 512 * 1024;
+
     public static UsageLimitSnapshot? ReadLatestLimits()
     {
         try
@@ -37,16 +45,13 @@ internal static class UsageReader
             UsageLimitSnapshot? newest = null;
             var recentFiles = Directory.EnumerateFiles(sessionsRoot, "*.jsonl", SearchOption.AllDirectories)
                 .Select(path => new { Path = path, Modified = File.GetLastWriteTimeUtc(path) })
-                .Where(file => file.Modified >= DateTime.UtcNow.AddDays(-8))
+                .Where(file => file.Modified >= DateTime.UtcNow - LatestSnapshotWindow)
                 .OrderByDescending(file => file.Modified)
-                .Take(8);
+                .Take(MaximumQuickFiles);
 
             foreach (var file in recentFiles)
             {
-                using var stream = new FileStream(file.Path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-                using var reader = new StreamReader(stream);
-                string? line;
-                while ((line = reader.ReadLine()) is not null)
+                foreach (var line in ReadRecentLines(file.Path))
                 {
                     if (line.Length == 0) continue;
                     try
@@ -73,8 +78,8 @@ internal static class UsageReader
                     }
                 }
 
-                // File modification order normally locates the current limits immediately.
-                if (newest is not null && file.Modified < newest.UpdatedAt.UtcDateTime) break;
+                // Do not stop at the first candidate. A background session can have a
+                // newer token event than the most recently modified foreground log.
             }
 
             return newest;
@@ -87,6 +92,22 @@ internal static class UsageReader
         {
             return null;
         }
+    }
+
+    // Token events are appended to JSONL files. Inspecting the bounded tail is
+    // enough to find the newest rate-limit event without parsing an entire
+    // multi-megabyte rollout log on the UI refresh path.
+    private static IEnumerable<string> ReadRecentLines(string path)
+    {
+        using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+        var start = Math.Max(0, stream.Length - QuickReadBytesPerFile);
+        stream.Seek(start, SeekOrigin.Begin);
+        using var reader = new StreamReader(stream);
+        if (start > 0) reader.ReadLine(); // The first line starts before our tail.
+
+        string? line;
+        while ((line = reader.ReadLine()) is not null)
+            yield return line;
     }
 
     public static UsageSummary Read()
@@ -102,11 +123,25 @@ internal static class UsageReader
             var creditBalanceHistory = new List<CreditBalanceSample>();
             var today = DateTimeOffset.Now.Date;
 
-            var earliestRelevantFile = DateTime.Now.AddDays(-8);
+            var earliestRelevantFile = DateTime.Now - LiveHistoryWindow;
             foreach (var path in Directory.EnumerateFiles(sessionsRoot, "*.jsonl", SearchOption.AllDirectories)
                          .Where(path => File.GetLastWriteTime(path) >= earliestRelevantFile))
             {
                 sessions.AddRange(ParseSession(path, today, newest, creditBalanceHistory));
+            }
+
+            // Keep the dashboard useful after a quiet period without returning to
+            // the slow, full eight-day scan. The bounded tail reader supplies the
+            // last known limit snapshot; only fresh samples are used for pace.
+            var latestSnapshot = ReadLatestLimits();
+            if (latestSnapshot is not null && (!newest.RateLimitsUpdate.HasValue || latestSnapshot.UpdatedAt > newest.RateLimitsUpdate))
+            {
+                newest.LastUpdate = latestSnapshot.UpdatedAt;
+                newest.RateLimitsUpdate = latestSnapshot.UpdatedAt;
+                newest.CreditBalance = latestSnapshot.CreditBalance;
+                newest.FiveHourPercent = latestSnapshot.FiveHourPercent;
+                newest.FiveHourResetsAt = latestSnapshot.FiveHourResetsAt;
+                newest.WeekPercent = latestSnapshot.WeekPercent;
             }
 
             var todaySessions = sessions.Where(s => s.LastUpdate.LocalDateTime.Date == today)
@@ -124,10 +159,9 @@ internal static class UsageReader
                 todaySessions.Sum(s => s.Tokens),
                 todaySessions.Take(5).ToList(),
                 creditBalanceHistory
-                    // Keep enough local history to recover the newest valid pace after a
-                    // quiet period or restart. The detector itself still measures at most
-                    // a two-hour interval and refuses to cross a top-up boundary.
-                    .Where(sample => sample.Timestamp >= DateTimeOffset.Now.AddDays(-8))
+                    // A pace is only meaningful for the active two-hour observation
+                    // window. Persisted pace handles a quiet period or restart.
+                    .Where(sample => sample.Timestamp >= DateTimeOffset.Now - LiveHistoryWindow)
                     .OrderBy(sample => sample.Timestamp)
                     .ToList(),
                 newest.LastUpdate is null ? "Nog geen gebruiksgegevens gevonden." : null);

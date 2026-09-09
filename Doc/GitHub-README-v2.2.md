@@ -14,7 +14,7 @@ At a glance, you can see:
 - Usage in the active 5-hour window and the weekly window.
 - The live 5-hour reset countdown and remaining allowance inside the credit card.
 - Today's model activity, processed tokens, and recent sessions.
-- Locally observed credit-use pace and optional alerts, with the last reliable pace retained during quiet periods and after restarts.
+- Locally observed credit-use pace and optional alerts, with timely active-window analysis and a quiet-period snapshot for a useful dashboard.
 - The exhausted-allowance status and the credit-use pace remain visible together when credits are in use.
 
 ## How it works
@@ -73,14 +73,15 @@ The Info window dynamically reads the bundled Dutch and English product descript
 [Download SHA256SUMS.txt](https://github.com/sibosays/CodexCreditMonitor/releases/latest/download/SHA256SUMS.txt) and compare the SHA-256 value of your chosen package:
 
 ```text
-9C19B3EACD2D858E7FB5C71E1C2E4BF5B358425FEC915BC7133F639FF7B71E5C  CodexCreditMonitorSetup_2.2_x64.msi
-A7B5018F26E24E3A783D98D26F3902C76CE2A7437354CD4B19EDD5DD40D3FE4B  CodexCreditMonitorPortable_2.2.zip
+4E786AF9CE55ECEBD983F2FAD1D0291FB8F68559D0DE76702D6C8DDF3BBA65E0  CodexCreditMonitorSetup_2.2_x64.msi
+63958176EA8D07D3AC3ADF53A7C85B6EA256102698FC7DD9DA4B339CAD7A40EE  CodexCreditMonitorPortable_2.2.zip
 ```
 
 ## What is new in v2.2?
 
 - Live 5-hour reset countdown and remaining allowance inside the credit card.
-- Reliable usage-pace persistence and recovery from recent local history.
+- Timely local alerts from a bounded active observation window, while the dashboard retains the latest known quiet-period limit snapshot.
+- A pre-recharge credit-use pace clears when the local balance recovers, preventing an old alarming rate from being shown as current.
 - Credit-use pace remains visible alongside the exhausted-allowance status.
 - Professional product-focused Info view instead of change history.
 - Gentle automatic Info scrolling with pause-on-hover behavior.

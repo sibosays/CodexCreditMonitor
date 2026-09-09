@@ -379,7 +379,7 @@ internal sealed class DashboardForm : Form
         ShowLowCreditWarningIfNeeded(usage);
         var creditSpendRate = CreditSpendRateDetector.Analyze(usage.CreditBalanceHistory);
         var latestValidCreditSpendRate = creditSpendRate ?? CreditSpendRateDetector.AnalyzeLatestValid(usage.CreditBalanceHistory);
-        UpdateCreditPace(usage, latestValidCreditSpendRate);
+        UpdateCreditPace(usage, latestValidCreditSpendRate, CreditSpendRateDetector.HasRecentTopUp(usage.CreditBalanceHistory));
         ShowRapidCreditSpendWarningIfNeeded(creditSpendRate);
         FitToContent();
     }
@@ -487,7 +487,7 @@ internal sealed class DashboardForm : Form
         }
     }
 
-    private void UpdateCreditPace(UsageSummary usage, CreditSpendRate? rate)
+    private void UpdateCreditPace(UsageSummary usage, CreditSpendRate? rate, bool balanceWasRecharged)
     {
         var includedAllowanceExhausted = usage.WeekPercent is >= 100d;
         _bundleStatusBadge.Visible = includedAllowanceExhausted;
@@ -496,7 +496,14 @@ internal sealed class DashboardForm : Form
         _balanceCard.Height = includedAllowanceExhausted ? 208 : 182;
         _creditPaceBadge.Visible = true;
 
-        if (rate is { CreditsPerHour: >= 0m } && rate.CreditsPerHour <= CreditSpendRateDetector.MaxCredibleCreditsPerHour)
+        if (balanceWasRecharged)
+        {
+            // Never carry a pre-recharge pace into a new balance run.
+            _settings.LastValidCreditsPerHour = null;
+            _settings.LastCreditPaceMeasuredAt = null;
+            _settings.Save();
+        }
+        else if (rate is { CreditsPerHour: >= 0m } && rate.CreditsPerHour <= CreditSpendRateDetector.MaxCredibleCreditsPerHour)
         {
             if (_settings.LastValidCreditsPerHour != rate.CreditsPerHour)
             {
@@ -570,6 +577,9 @@ internal sealed class DashboardForm : Form
     private void ShowLowCreditWarningIfNeeded(UsageSummary usage)
     {
         if (usage.CreditBalance is not decimal credits) return;
+        // A dashboard restart may restore its last known local balance. That is
+        // useful context, but an old record must never raise a new urgent toast.
+        if (usage.LastUpdate is not DateTimeOffset updated || updated < DateTimeOffset.Now.AddMinutes(-5)) return;
 
         var threshold = credits <= 10m ? 10m : credits <= 25m ? 25m : 0m;
         if (threshold == 0m)

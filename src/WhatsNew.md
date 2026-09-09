@@ -6,7 +6,8 @@
 - De tegoedkaart toont permanent en sneller de echte resterende tijd tot de reset van het actuele 5-uursvenster, plus het resterende percentage. Tijdelijke vernieuwingsmeldingen vervangen deze informatie niet.
 - Info toont voortaan uitsluitend de professionele, actuele productbeschrijving uit `README.md`. Wijzigingsgeschiedenis blijft in dit afzonderlijke What's New-bronbestand.
 - Herstelt Engelse tooltips, adaptieve meertalige instellingen, het vaste compacte dashboardformaat en vloeiend continu Info-scrollen.
-- Bewaart het laatst geldige verbruikstempo, herstelt dit bij een rustige periode of herstart uit maximaal acht dagen lokale historie, negeert ongeldige negatieve metingen en vernieuwt alleen met betrouwbare achtergronddata.
+- Bewaart het laatst geldige verbruikstempo voor een rustige periode of herstart, negeert ongeldige negatieve metingen en vernieuwt alleen met betrouwbare achtergronddata.
+- Vernieuwt waarschuwingen en actuele gebruiksgegevens vanuit een begrensd, recent lokaal observatievenster, zodat een grote oude sessiehistorie geen late toast meer veroorzaakt. Na een opwaardering wordt een eerder verbruikstempo niet meer als actueel getoond.
 - Toont bij een opgebruikte weekbundel zowel de aparte bundelstatus als het actuele of laatst betrouwbare verbruikstempo in credits per uur; de waarschuwing vervangt die nuttige informatie niet meer.
 - Start de tray-app met Windows Verkenner als ouderproces en controleert vóór uitvoering dat er geen Windows-jobkoppeling meer is. Praktijktest bij volledig afsluiten van ChatGPT wacht op gebruikerscontrole.
 - Herbouwt de PortableApps-launcher met geldige integriteitscontrole en een startwijze die past bij de zelfstandige tray-app.
@@ -56,7 +57,8 @@ Het dashboard open je vanuit het systeemvak. Instellingen, handmatig vernieuwen 
 - The credit card permanently and more quickly shows the real time remaining until the current 5-hour window resets, together with the remaining percentage. Temporary refresh feedback never replaces it.
 - Info now shows only the professional, current product description from `README.md`. Change history remains in this separate What's New source file.
 - Restores English tooltips, adaptive bilingual Settings layout, the fixed compact dashboard size, and smooth continuous Info scrolling.
-- Preserves the last valid usage pace, recovers it after a quiet period or restart from up to eight days of local history, rejects invalid negative measurements, and replaces it only with reliable background data.
+- Refreshes warnings and current usage from a bounded, recent local observation window, so a large old session history cannot delay a toast. After a recharge, a previous usage pace is no longer shown as current.
+- Preserves the last valid usage pace for a quiet period or restart, rejects invalid negative measurements, and replaces it only with reliable background data.
 - When the weekly allowance is exhausted, shows both the separate allowance status and the current or last reliable credit-use pace in credits per hour; the warning no longer replaces that useful information.
 - Detaches the tray application from its launching ChatGPT/Codex process so the monitor remains independently active.
 - Rebuilds the PortableApps launcher with a valid integrity check and startup behavior suited to the independent tray application.

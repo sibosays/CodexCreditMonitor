@@ -111,20 +111,23 @@ internal static class CreditSpendRateDetector
         }
         history = changes;
 
+        // A recharge makes every preceding pace obsolete. Do not walk back past it:
+        // otherwise the dashboard can keep showing an alarming old rate after the
+        // balance has already recovered.
+        var currentRunStart = 0;
+        for (var index = 1; index < history.Count; index++)
+        {
+            if (history[index].Balance - history[index - 1].Balance >= BalanceTopUpTolerance)
+                currentRunStart = index;
+        }
+
         // Walk backwards so a temporarily flat current balance can reuse the newest
-        // genuinely measured pace. Never bridge a recharge/top-up boundary.
-        for (var endIndex = history.Count - 1; endIndex > 0; endIndex--)
+        // genuinely measured pace, but only from the current balance run.
+        for (var endIndex = history.Count - 1; endIndex > currentRunStart; endIndex--)
         {
             var end = history[endIndex];
-            var runStart = 0;
-            for (var index = 1; index <= endIndex; index++)
-            {
-                if (history[index].Balance - history[index - 1].Balance >= BalanceTopUpTolerance)
-                    runStart = index;
-            }
-
             var earliest = end.Timestamp - LongWindow;
-            for (var baselineIndex = runStart; baselineIndex < endIndex; baselineIndex++)
+            for (var baselineIndex = currentRunStart; baselineIndex < endIndex; baselineIndex++)
             {
                 var baseline = history[baselineIndex];
                 if (baseline.Timestamp < earliest || baseline.Balance <= end.Balance) continue;
@@ -145,5 +148,18 @@ internal static class CreditSpendRateDetector
         }
 
         return null;
+    }
+
+    public static bool HasRecentTopUp(IReadOnlyList<CreditBalanceSample> samples)
+    {
+        var history = samples
+            .Where(sample => sample.Balance >= 0m && sample.Timestamp != default)
+            .OrderBy(sample => sample.Timestamp)
+            .GroupBy(sample => sample.Timestamp)
+            .Select(group => group.Last())
+            .ToList();
+
+        return history.Zip(history.Skip(1), (previous, current) => current.Balance - previous.Balance)
+            .Any(increase => increase >= BalanceTopUpTolerance);
     }
 }

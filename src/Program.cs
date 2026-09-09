@@ -126,16 +126,6 @@ internal static class Program
             VerifyCreditPaceDetection();
             return;
         }
-        if (commandLine.Contains("--verify-limits-read", StringComparer.OrdinalIgnoreCase))
-        {
-            var stopwatch = Stopwatch.StartNew();
-            var snapshot = UsageReader.ReadLatestLimits();
-            stopwatch.Stop();
-            File.WriteAllText(
-                Path.Combine(AppContext.BaseDirectory, "limits-read-ms.txt"),
-                $"{stopwatch.ElapsedMilliseconds}|{snapshot?.FiveHourResetsAt:O}|{snapshot?.FiveHourPercent}");
-            return;
-        }
         try
         {
             Process.GetCurrentProcess().PriorityClass = ProcessPriorityClass.BelowNormal;
@@ -525,6 +515,11 @@ internal static class Program
             invalidShortSpike is not null ||
             recoveredHistoricalRate?.CreditsPerHour != 8m ||
             historicalRateAcrossTopUp is not null ||
+            !CreditSpendRateDetector.HasRecentTopUp(
+            [
+                new CreditBalanceSample(now.AddHours(-1), 20m),
+                new CreditBalanceSample(now, 250m)
+            ]) ||
             persisted?.LastValidCreditsPerHour != 12.5m ||
             persisted.LastCreditPaceMeasuredAt != now)
             throw new InvalidOperationException("Credit pace detection verification failed.");
