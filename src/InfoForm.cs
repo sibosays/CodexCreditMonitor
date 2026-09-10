@@ -43,10 +43,11 @@ internal sealed class InfoForm : Form
         // A quiet divider separates the looping copies without introducing a
         // distracting label or a large blank block.
         var loopGap = string.Concat(Environment.NewLine, Environment.NewLine,
-            new string('─', 38), Environment.NewLine, Environment.NewLine);
+            "■", Environment.NewLine, Environment.NewLine);
         var restartHeading = Ui.T("PRODUCTINFORMATIE", "PRODUCT INFORMATION");
-        var firstCopy = restartHeading + Environment.NewLine + displayText;
+        var firstCopy = restartHeading + Environment.NewLine + Environment.NewLine + displayText;
         _secondCopyStart = firstCopy.Length + loopGap.Length;
+        var secondCopy = restartHeading + Environment.NewLine + Environment.NewLine + displayText;
         var content = new RichTextBox
         {
             Dock = DockStyle.Fill,
@@ -55,16 +56,22 @@ internal sealed class InfoForm : Form
             BackColor = BackColor,
             ForeColor = Color.FromArgb(221, 232, 246),
             Font = new Font("Segoe UI", 10),
-            Text = firstCopy + loopGap + restartHeading + Environment.NewLine + displayText,
+            Text = firstCopy + loopGap + secondCopy,
             DetectUrls = true,
             ScrollBars = RichTextBoxScrollBars.Vertical,
             Margin = new Padding(0, 16, 0, 0),
             TabStop = false
         };
+        content.SelectAll();
+        content.SelectionFont = content.Font;
         content.Select(0, restartHeading.Length);
         content.SelectionFont = new Font(content.Font, FontStyle.Bold);
-        content.Select(_secondCopyStart, restartHeading.Length);
-        content.SelectionFont = new Font(content.Font, FontStyle.Bold);
+        var secondHeadingStart = content.Text.LastIndexOf(restartHeading, StringComparison.Ordinal);
+        if (secondHeadingStart > 0)
+        {
+            content.Select(secondHeadingStart, restartHeading.Length);
+            content.SelectionFont = new Font(content.Font, FontStyle.Bold);
+        }
         content.Select(0, 0);
 
         root.Controls.Add(product, 0, 0);
