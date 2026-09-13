@@ -24,6 +24,7 @@ Neither edition requires a separate .NET Desktop Runtime.
 ## New in v2.2
 
 - Restored timely local alerts by limiting background usage analysis to the active observation window, while retaining the latest known limit snapshot for a quiet dashboard.
+- Makes limit refreshes reliable when the newest local snapshot is in an older-looking session file or precedes a large log record, including a queued follow-up for overlapping refresh requests.
 - Clears a pre-recharge credit-use pace when the local balance recovers, so an old alarming rate is not presented as current.
 - Added the real 5-hour reset countdown and remaining allowance inside the credit card.
 - Reworked Info into a professional product description with gentle automatic scrolling and pause on hover.

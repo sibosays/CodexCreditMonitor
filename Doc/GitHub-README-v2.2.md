@@ -73,14 +73,15 @@ The Info window dynamically reads the bundled Dutch and English product descript
 [Download SHA256SUMS.txt](https://github.com/sibosays/CodexCreditMonitor/releases/latest/download/SHA256SUMS.txt) and compare the SHA-256 value of your chosen package:
 
 ```text
-4E786AF9CE55ECEBD983F2FAD1D0291FB8F68559D0DE76702D6C8DDF3BBA65E0  CodexCreditMonitorSetup_2.2_x64.msi
-63958176EA8D07D3AC3ADF53A7C85B6EA256102698FC7DD9DA4B339CAD7A40EE  CodexCreditMonitorPortable_2.2.zip
+2222F9530149D45468BFD32F4C674C5DCA56ADE7489EAC8D4399C2522D3D866E  CodexCreditMonitorSetup_2.2_x64.msi
+52AC01DF6F09A97C61B57FC3119FD231399A880FE7B04F495BE27A649F41C018  CodexCreditMonitorPortable_2.2.zip
 ```
 
 ## What is new in v2.2?
 
 - Live 5-hour reset countdown and remaining allowance inside the credit card.
 - Timely local alerts from a bounded active observation window, while the dashboard retains the latest known quiet-period limit snapshot.
+- Reliable limit refreshes when the newest snapshot is in an older-looking session file or before a large local log record.
 - A pre-recharge credit-use pace clears when the local balance recovers, preventing an old alarming rate from being shown as current.
 - Credit-use pace remains visible alongside the exhausted-allowance status.
 - Professional product-focused Info view instead of change history.
