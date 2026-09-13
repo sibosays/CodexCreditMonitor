@@ -32,26 +32,24 @@ internal static class UsageReader
     // longer actionable.
     private static readonly TimeSpan LiveHistoryWindow = TimeSpan.FromHours(2);
     private static readonly TimeSpan LatestSnapshotWindow = TimeSpan.FromDays(8);
-    private const int MaximumQuickFiles = 16;
-    private const int QuickReadBytesPerFile = 512 * 1024;
+    private const int QuickReadBytesPerFile = 8 * 1024 * 1024;
 
     public static UsageLimitSnapshot? ReadLatestLimits()
     {
         try
         {
-            var sessionsRoot = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".codex", "sessions");
+            var sessionsRoot = GetSessionsRoot();
             if (!Directory.Exists(sessionsRoot)) return null;
 
             UsageLimitSnapshot? newest = null;
             var recentFiles = Directory.EnumerateFiles(sessionsRoot, "*.jsonl", SearchOption.AllDirectories)
                 .Select(path => new { Path = path, Modified = File.GetLastWriteTimeUtc(path) })
                 .Where(file => file.Modified >= DateTime.UtcNow - LatestSnapshotWindow)
-                .OrderByDescending(file => file.Modified)
-                .Take(MaximumQuickFiles);
+                .OrderByDescending(file => file.Modified);
 
             foreach (var file in recentFiles)
             {
-                foreach (var line in ReadRecentLines(file.Path))
+                foreach (var line in ReadRecentLinesNewestFirst(file.Path))
                 {
                     if (line.Length == 0) continue;
                     try
@@ -71,6 +69,7 @@ internal static class UsageReader
                             GetUnixTimePath(limits, "primary", "resets_at"),
                             GetDoublePath(limits, "secondary", "used_percent"),
                             timestamp);
+                        break;
                     }
                     catch (JsonException)
                     {
@@ -94,27 +93,41 @@ internal static class UsageReader
         }
     }
 
-    // Token events are appended to JSONL files. Inspecting the bounded tail is
-    // enough to find the newest rate-limit event without parsing an entire
-    // multi-megabyte rollout log on the UI refresh path.
-    private static IEnumerable<string> ReadRecentLines(string path)
+    // Token events are appended to JSONL files. Walk backwards through a
+    // bounded tail so large response/tool payloads after the last token event do
+    // not hide the newest rate-limit snapshot, while the UI refresh remains
+    // bounded even for active multi-megabyte logs.
+    private static IEnumerable<string> ReadRecentLinesNewestFirst(string path)
     {
         using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-        var start = Math.Max(0, stream.Length - QuickReadBytesPerFile);
-        stream.Seek(start, SeekOrigin.Begin);
-        using var reader = new StreamReader(stream);
-        if (start > 0) reader.ReadLine(); // The first line starts before our tail.
+        var length = stream.Length;
+        if (length == 0) yield break;
 
-        string? line;
-        while ((line = reader.ReadLine()) is not null)
-            yield return line;
+        var bytesToRead = (int)Math.Min(length, QuickReadBytesPerFile);
+        var buffer = new byte[bytesToRead];
+        stream.Seek(length - bytesToRead, SeekOrigin.Begin);
+        var read = stream.Read(buffer, 0, bytesToRead);
+        var text = System.Text.Encoding.UTF8.GetString(buffer, 0, read);
+        if (bytesToRead < length)
+        {
+            var firstNewLine = text.IndexOf('\n');
+            if (firstNewLine < 0) yield break;
+            text = text[(firstNewLine + 1)..];
+        }
+
+        var lines = text.Split('\n');
+        for (var i = lines.Length - 1; i >= 0; i--)
+        {
+            var line = lines[i].TrimEnd('\r');
+            if (line.Length > 0) yield return line;
+        }
     }
 
     public static UsageSummary Read()
     {
         try
         {
-            var sessionsRoot = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".codex", "sessions");
+            var sessionsRoot = GetSessionsRoot();
             if (!Directory.Exists(sessionsRoot))
                 return new UsageSummary(false, null, null, null, null, null, 0, 0, [], [], Ui.T("Geen lokale Codex-sessies gevonden.", "No local Codex sessions found."));
 
@@ -352,6 +365,10 @@ internal static class UsageReader
         => limits.ValueKind == JsonValueKind.Object &&
            limits.TryGetProperty("limit_id", out var limitId) &&
            string.Equals(limitId.GetString(), "codex", StringComparison.OrdinalIgnoreCase);
+
+    private static string GetSessionsRoot()
+        => Environment.GetEnvironmentVariable("CODEX_CREDIT_MONITOR_SESSIONS_DIR")
+           ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".codex", "sessions");
 
     private static string ReadableSessionName(string value)
     {

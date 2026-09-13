@@ -126,6 +126,11 @@ internal static class Program
             VerifyCreditPaceDetection();
             return;
         }
+        if (commandLine.Contains("--verify-limits-read", StringComparer.OrdinalIgnoreCase))
+        {
+            VerifyLatestLimitsRead();
+            return;
+        }
         try
         {
             Process.GetCurrentProcess().PriorityClass = ProcessPriorityClass.BelowNormal;
@@ -524,6 +529,62 @@ internal static class Program
             persisted.LastCreditPaceMeasuredAt != now)
             throw new InvalidOperationException("Credit pace detection verification failed.");
     }
+
+    private static void VerifyLatestLimitsRead()
+    {
+        var previousSessionsRoot = Environment.GetEnvironmentVariable("CODEX_CREDIT_MONITOR_SESSIONS_DIR");
+        var tempRoot = Path.Combine(Path.GetTempPath(), "ccm-limits-read-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempRoot);
+        try
+        {
+            Environment.SetEnvironmentVariable("CODEX_CREDIT_MONITOR_SESSIONS_DIR", tempRoot);
+            var now = DateTimeOffset.UtcNow;
+
+            for (var i = 0; i < 20; i++)
+            {
+                var decoy = Path.Combine(tempRoot, $"decoy-{i:D2}.jsonl");
+                File.WriteAllText(decoy, TokenCountLine(now.AddMinutes(i), 245m));
+                File.SetLastWriteTimeUtc(decoy, now.AddMinutes(30 + i).UtcDateTime);
+            }
+
+            var olderModifiedButNewestSnapshot = Path.Combine(tempRoot, "older-modified-newest-snapshot.jsonl");
+            File.WriteAllText(olderModifiedButNewestSnapshot, TokenCountLine(now.AddHours(2), 76.306192m));
+            File.SetLastWriteTimeUtc(olderModifiedButNewestSnapshot, now.AddMinutes(-10).UtcDateTime);
+
+            var latest = UsageReader.ReadLatestLimits();
+            if (latest?.CreditBalance != 76.306192m)
+                throw new InvalidOperationException($"Latest limits selection failed: {latest?.CreditBalance}");
+
+            foreach (var file in Directory.EnumerateFiles(tempRoot, "*.jsonl"))
+                File.Delete(file);
+
+            var buriedSnapshot = Path.Combine(tempRoot, "buried-snapshot.jsonl");
+            File.WriteAllText(
+                buriedSnapshot,
+                TokenCountLine(now, 75m) +
+                "{\"type\":\"response_item\",\"payload\":{\"text\":\"" + new string('x', 700_000) + "\"}}\n");
+
+            latest = UsageReader.ReadLatestLimits();
+            if (latest?.CreditBalance != 75m)
+                throw new InvalidOperationException($"Tail limits read failed: {latest?.CreditBalance}");
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("CODEX_CREDIT_MONITOR_SESSIONS_DIR", previousSessionsRoot);
+            try { Directory.Delete(tempRoot, recursive: true); }
+            catch { }
+        }
+    }
+
+    private static string TokenCountLine(DateTimeOffset timestamp, decimal balance)
+        => string.Format(
+            System.Globalization.CultureInfo.InvariantCulture,
+            "{{\"timestamp\":\"{0:O}\",\"type\":\"event_msg\",\"payload\":{{\"type\":\"token_count\",\"rate_limits_by_limit_id\":{{\"codex\":{{\"credits\":{{\"balance\":{1}}},\"primary\":{{\"used_percent\":100,\"resets_at\":{2}}},\"secondary\":{{\"used_percent\":76,\"resets_at\":{3}}}}}}}}}}}{4}",
+            timestamp,
+            balance,
+            timestamp.AddHours(1).ToUnixTimeSeconds(),
+            timestamp.AddDays(1).ToUnixTimeSeconds(),
+            Environment.NewLine);
 
     private static void RenderDashboardPreview(decimal balance, double weekPercent, string outputFileName = "dashboard-preview.png")
     {

@@ -50,6 +50,7 @@ internal sealed class DashboardForm : Form
     private CreditSpendAlertLevel _lastCreditSpendAlertLevel;
     private bool _isRefreshing;
     private bool _notifyWhenCurrentRefreshCompletes;
+    private bool _refreshAgainAfterCurrentCompletes;
     private int _autoRechargeThreshold;
     private int _autoRechargeTarget;
     private FileSystemWatcher? _sessionWatcher;
@@ -212,10 +213,12 @@ internal sealed class DashboardForm : Form
         {
             // A tray refresh during the initial/background read must still receive its mini-widget result.
             _notifyWhenCurrentRefreshCompletes |= notifyWhenComplete;
+            _refreshAgainAfterCurrentCompletes = true;
             return;
         }
         _isRefreshing = true;
         _notifyWhenCurrentRefreshCompletes = notifyWhenComplete;
+        _refreshAgainAfterCurrentCompletes = false;
         _updated.Text = Ui.S("Dashboard.RefreshingLocal");
         ShowRefreshBanner(Ui.S("Dashboard.Refreshing"), Color.Transparent, Color.FromArgb(171, 202, 242), hideAfter: false);
         try
@@ -242,8 +245,11 @@ internal sealed class DashboardForm : Form
         }
         finally
         {
+            var refreshAgain = _refreshAgainAfterCurrentCompletes && !IsDisposed;
             _notifyWhenCurrentRefreshCompletes = false;
+            _refreshAgainAfterCurrentCompletes = false;
             _isRefreshing = false;
+            if (refreshAgain) BeginInvoke((Action)(() => RefreshUsage()));
         }
     }
 
