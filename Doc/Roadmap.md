@@ -44,4 +44,5 @@ Current sequence:
 - `2026-09-06_CHANGESET_002.md` — completed v2.2 stable-release bundle.
 - `2026-09-06_CHANGESET_003.md` — completed historical seven-bug v2.2 quality and stability bundle.
 - `2026-09-09_CHANGESET_004.md` — active v2.2.0 lifecycle and usage-pace corrective bundle; no version increase is authorized.
+- `2026-09-13_CHANGESET_005.md` — completed v2.2.0 refresh-reliability corrective publication and live verification; no version increase.
 
